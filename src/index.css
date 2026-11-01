@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes alarm-flash {
+  0%, 100% { background-color: rgb(127 29 29 / 0.95); box-shadow: 0 0 0 0 rgb(239 68 68 / 0.6); }
+  50% { background-color: rgb(220 38 38 / 0.95); box-shadow: 0 0 32px 4px rgb(239 68 68 / 0.7); }
+}
+@keyframes alarm-edge {
+  0%, 100% { box-shadow: inset 0 0 0 0 rgb(239 68 68 / 0); }
+  50% { box-shadow: inset 0 0 0 6px rgb(239 68 68 / 0.9), inset 0 0 80px rgb(239 68 68 / 0.35); }
+}
+@keyframes funding-flash {
+  0%, 100% { background-color: rgb(239 68 68 / 0.08); }
+  50% { background-color: rgb(239 68 68 / 0.22); }
+}
+@keyframes ken-burns {
+  0% { opacity: 0; transform: scale(0.97); }
+  6% { opacity: 1; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1.04); }
+}
+
+@layer utilities {
+  .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #475569 transparent; }
+  .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 9999px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #64748b; }
+  .animate-fade-up { animation: fade-up 0.5s ease-out both; }
+  .animate-fade-in { animation: fade-in 0.2s ease-out both; }
+  .animate-pop-in { animation: pop-in 0.25s ease-out both; }
+  .animate-ken-burns { animation: ken-burns 14s ease-out both; }
+  .animate-alarm-flash { animation: alarm-flash 0.8s ease-in-out infinite; }
+  .animate-alarm-edge { animation: alarm-edge 0.8s ease-in-out infinite; }
+  .funding-flash-red { animation: funding-flash 1.2s ease-in-out infinite; }
+  [data-paused] .animate-ken-burns { animation-play-state: paused; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up, .animate-fade-in, .animate-pop-in, .animate-ken-burns { animation: none; }
+}
+
+[data-i18n-hidden] {
+  display: none !important;
+}
+
+body {
+  overflow-wrap: break-word;
+  overflow-x: clip;
+}
+
+/* Translated text is often much longer than English; let rows wrap instead of pushing out of their box. */
+html:not([lang="en"]) :is(h1, h2, h3, h4, p, li, label, dt, dd, button, a) {
+  hyphens: auto;
+}
+html:not([lang="en"]) :is(.flex.justify-between, .flex.items-center.gap-2, .flex.items-center.gap-3):not(.flex-col):not(.flex-nowrap):not(.truncate) {
+  flex-wrap: wrap;
+}
+html:not([lang="en"]) .flex.justify-between:not([class*="gap-"]) {
+  column-gap: 0.75rem;
+  row-gap: 0.25rem;
+}
+html:not([lang="en"]) button.whitespace-nowrap,
+html:not([lang="en"]) button .whitespace-nowrap,
+html:not([lang="en"]) th {
+  white-space: normal;
+}
+
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  html:is([lang="es"], [lang="fr"], [lang="de"], [lang="id"], [lang="ru"], [lang="la"], [lang="ar"]) [data-wide-nav] {
+    display: none;
+  }
+}

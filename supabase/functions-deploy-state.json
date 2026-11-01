@@ -1,0 +1,25 @@
+{
+  "projectId": "71880396",
+  "functions": {
+    "admin-users": {
+      "hasChanged": false,
+      "hash": "56914e16f8fc411f4a50e6af32ca866e8841010e78d1a1b0241b2f9afa4c546f"
+    },
+    "market-news": {
+      "hasChanged": false,
+      "hash": "08b727898c7b0cd93eb3cbf626997c29fa6d936d226a233fc7d9135557009961"
+    },
+    "metaapi": {
+      "hasChanged": false,
+      "hash": "7830f0d3d3440450b6275863d70a04efb589f15becf0396e4f09c429d4432655"
+    },
+    "telegram-alerts": {
+      "hasChanged": false,
+      "hash": "de7f589b5458749430f282afe9916fbaa8c13c2d345d87805b85f63cdac94bc9"
+    },
+    "terminal-installer": {
+      "hasChanged": false,
+      "hash": "a267f8d0e506623f6b4ceb7cc4b128b01e340fc4367207cd36995c201ca55bdc"
+    }
+  }
+}

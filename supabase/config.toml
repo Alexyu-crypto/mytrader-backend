@@ -1,0 +1,14 @@
+[functions.market-news]
+verify_jwt = true
+
+[functions.admin-users]
+verify_jwt = true
+
+[functions.telegram-alerts]
+verify_jwt = true
+
+[functions.terminal-installer]
+verify_jwt = false
+
+[functions.metaapi]
+verify_jwt = false
