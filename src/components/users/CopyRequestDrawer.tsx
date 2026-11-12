@@ -129,7 +129,7 @@ export function CopyRequestDrawer({
 
           {request.message && (
             <section>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Message 留言</h3>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Password 密碼</h3>
               <p className="whitespace-pre-wrap rounded-lg border border-slate-800 bg-slate-950/50 p-3 text-sm leading-relaxed text-slate-300">{request.message}</p>
             </section>
           )}

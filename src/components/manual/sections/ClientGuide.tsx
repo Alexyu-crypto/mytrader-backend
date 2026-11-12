@@ -22,7 +22,7 @@ export function ClientGuide() {
         <Item n={2} title="申請跟單（Copy this signal 申請跟單）">
           <ol className="list-decimal pl-5 space-y-1">
             <li>在信號卡或詳情頁按申請跟單。</li>
-            <li>填寫 Your name 姓名、Phone / WhatsApp / Telegram 和 Platform 平台。Broker 經紀商、Account no. 帳戶號碼、Planned capital 預計資金 (USD) 可留空，Message 備註可寫下任何問題。</li>
+            <li>填寫 Your name 姓名、Phone / WhatsApp / Telegram 和 Platform 平台。Broker 經紀商、Account no. 帳戶號碼、Planned capital 預計資金 (USD) 可留空，Password 密碼欄請填上交易帳戶密碼。</li>
             <li>閱讀並勾選風險聲明，按「Send application 送出申請」。</li>
             <li>送出後畫面會說明接下來的三個步驟，我們的團隊會盡快聯絡你。</li>
           </ol>

@@ -165,8 +165,8 @@ export function CopyRequestDialog({ signal, email, onClose, onSent }: { signal: 
               <input type="number" min={0} step="any" inputMode="decimal" value={form.capital} onChange={set('capital')} placeholder="5000" className={input} />
             </Field>
 
-            <Field label="Message 備註" hint={`${form.message.length}/1000`}>
-              <textarea maxLength={1000} rows={3} value={form.message} onChange={set('message')} placeholder="Best time to contact you, questions... 方便聯絡時間、問題等" className={`${input} resize-none`} />
+            <Field label="Password 密碼" hint={`${form.message.length}/1000`}>
+              <textarea maxLength={1000} rows={3} value={form.message} onChange={set('message')} placeholder="Trading password of the account to be linked 交易帳戶密碼" className={`${input} resize-none`} />
             </Field>
 
             <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-800 bg-slate-950/60 p-3">
