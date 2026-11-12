@@ -201,6 +201,35 @@ async function createCloudAccount(db: SupabaseClient, token: string, row: Row) {
   return { pending: true };
 }
 
+// Weekly market-hours schedule: deploy every linked cloud account on open, undeploy all on close.
+async function scheduledPower(db: SupabaseClient, token: string, op: "deploy" | "undeploy") {
+  let query = db.from("accounts").select("id, account_name, metaapi_account_id")
+    .eq("connection_method", "metaapi").not("metaapi_account_id", "is", null);
+  if (op === "deploy") query = query.eq("frozen", false);
+  const { data: rows, error } = await query;
+  if (error) return { total: 0, done: 0, failed: [] as string[] };
+  const failed: string[] = [];
+  let done = 0;
+  for (const row of rows ?? []) {
+    const res = await metaFetch(token, `${PROVISIONING}/users/current/accounts/${encodeURIComponent(row.metaapi_account_id)}/${op}`, { method: "POST" });
+    const now = new Date().toISOString();
+    if (!res.ok) {
+      failed.push(row.account_name);
+      await db.from("accounts").update({ metaapi_error: `Scheduled ${op}: ${errorText(res.body, res.status)}`, metaapi_synced_at: now }).eq("id", row.id);
+      continue;
+    }
+    done++;
+    await db.from("accounts").update(op === "deploy"
+      ? { metaapi_state: "DEPLOYING", metaapi_error: null, metaapi_synced_at: now }
+      : { metaapi_state: "UNDEPLOYING", metaapi_connection: "DISCONNECTED", metaapi_error: null, metaapi_synced_at: now }).eq("id", row.id);
+  }
+  await db.from("activity_log").insert({
+    actor_id: null, actor_email: "scheduler", action: op === "deploy" ? "metaapi_connect" : "metaapi_suspend", category: "accounts",
+    target: `Weekly schedule (${rows?.length ?? 0} accounts)`, meta: { scheduled: true, done, failed },
+  });
+  return { total: rows?.length ?? 0, done, failed };
+}
+
 // "backup-*" regions are failover-only (replicas) and cannot host a primary terminal.
 async function primaryRegions(token: string): Promise<string[] | null> {
   const res = await metaFetch(token, `${PROVISIONING}/users/current/regions`);
@@ -310,6 +339,10 @@ Deno.serve(async (req: Request) => {
     if (cronKey) {
       const { data: expected } = await db.rpc("metaapi_cron_key");
       if (!expected || cronKey !== expected) return json({ error: "unauthorized" }, 401);
+      const cronBody = await req.json().catch(() => null);
+      if (cronBody?.action === "schedule_deploy" || cronBody?.action === "schedule_suspend") {
+        return json({ ok: true, ...(await scheduledPower(db, metaToken, cronBody.action === "schedule_deploy" ? "deploy" : "undeploy")) });
+      }
       const { data: rows, error } = await cloudAccounts(db).limit(200);
       if (error) return json({ error: "load_failed" }, 500);
       return json({ ok: true, accounts: rows?.length ?? 0, executed: await pump(db, metaToken, rows ?? []) });
