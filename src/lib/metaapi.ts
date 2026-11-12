@@ -92,3 +92,13 @@ export async function connectMetaApi(accountId: string): Promise<{ error: string
   const { data, error } = await call({ action: 'connect', account_id: accountId });
   return { error, pending: data?.pending === true };
 }
+
+// MetaApi answers "still provisioning" while it detects new broker server settings; resume with the same request.
+export async function connectMetaApiUntilReady(accountId: string, attempts = 6): Promise<{ error: string | null; pending: boolean }> {
+  let result = await connectMetaApi(accountId);
+  for (let i = 1; i < attempts && result.pending && !result.error; i++) {
+    await new Promise((r) => setTimeout(r, 5000));
+    result = await connectMetaApi(accountId);
+  }
+  return result;
+}

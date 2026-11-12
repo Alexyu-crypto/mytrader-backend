@@ -5,7 +5,7 @@ import { MoveRegionDialog } from '@/components/metaapi/MoveRegionDialog';
 import { useAccounts } from '@/hooks/useRealtime';
 import { useNotice } from '@/hooks/useConfirm';
 import { formatCurrency, isOnline, timeAgo } from '@/lib/format';
-import { connectMetaApi, regionLabel, syncMetaApi } from '@/lib/metaapi';
+import { connectMetaApiUntilReady, regionLabel, syncMetaApi } from '@/lib/metaapi';
 import type { Account } from '@/lib/types';
 
 type Issue = 'no_id' | 'stopped' | 'broker' | 'connecting' | 'offline' | null;
@@ -63,7 +63,7 @@ export function MetaApiMonitorPage() {
   const connect = async (a: Account) => {
     setBusyId(a.id);
     setNotice(null);
-    const { error, pending } = await connectMetaApi(a.id);
+    const { error, pending } = await connectMetaApiUntilReady(a.id);
     setBusyId(null);
     if (error) setNotice({ tone: 'error', text: `${a.account_name}: ${error}` });
     else setNotice({ tone: 'ok', text: pending

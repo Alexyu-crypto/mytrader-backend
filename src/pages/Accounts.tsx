@@ -7,7 +7,7 @@ import type { Account } from '@/lib/types';
 import { X, Download, Plus, Trash2, Edit3, CheckCircle2, User, Hash, Server, Copy, Globe, Lock, Loader2, Upload, FileDown, KeyRound, Eye, EyeOff, Monitor, Search, Archive, ShieldAlert, BookOpen, ArrowUp, ArrowDown, ArrowUpDown, Cloud, Power, PowerOff } from 'lucide-react';
 import { IconButton } from '@/components/IconButton';
 import { MAX_IP_LENGTH, MAX_PASSWORD_LENGTH, fetchAccountAccess, fetchAccountIps, saveAccountPasswords, type LoginIp } from '@/lib/accountCredentials';
-import { connectMetaApi, suspendMetaApi } from '@/lib/metaapi';
+import { connectMetaApi, connectMetaApiUntilReady, suspendMetaApi } from '@/lib/metaapi';
 import { isOnline as seenRecently, timeAgo } from '@/lib/format';
 import { serverNow } from '@/lib/serverClock';
 import { ACCOUNT_NAME_PATTERN, MAX_ACCOUNT_NAME_LENGTH, buildAccountName, exportAccountsCsv, toBrokerShort, toInitials } from '@/lib/accountImport';
@@ -654,8 +654,10 @@ export function Accounts({ canEdit, prefill, onPrefillUsed }: { canEdit: boolean
             setShowModal(false);
             if (acc.connection_method !== 'metaapi') setShowInstructions(acc);
             else if (!acc.metaapi_account_id) {
-              connectMetaApi(acc.id).then(({ error }) => {
+              connectMetaApiUntilReady(acc.id).then(({ error, pending }) => {
                 if (error) void notify(`${acc.account_name}: ${error}\n可以稍後喺「Meta API 監察」頁撳「連線」再試。You can retry from the MetaApi Monitor page.`, { title: 'Cloud not connected · 雲端未連線' });
+                else if (pending) void notify(`${acc.account_name}: MetaApi 仍在設定經紀商伺服器，請稍後喺「Meta API 監察」頁撳「連線」完成。\nMetaApi is still setting up the broker server; press Connect on the MetaApi Monitor page shortly to finish.`, { title: 'Cloud still provisioning · 雲端建立中' });
+                reload();
               });
             }
             setRenamedFrom(renamedFrom ?? null);
