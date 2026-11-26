@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, Wallet, Loader2, Download } from 'lucide-react';
+import { Plus, Wallet, Loader2, Download, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useNotice } from '@/hooks/useConfirm';
 import { fetchMyLinkedAccounts } from '@/lib/clientAccounts';
 import { formatCurrency, isOnline, timeAgo } from '@/lib/format';
 import { RequestAccountDialog } from '@/components/accounts/RequestAccountDialog';
 import { AccountRequestsPanel } from '@/components/accounts/AccountRequestsPanel';
+import { RISK_ACTION_LABELS, type RiskAction } from '@/lib/accountRequests';
 
 interface MyAccount {
   account_name: string;
@@ -14,6 +15,10 @@ interface MyAccount {
   balance: number;
   equity: number;
   last_seen: string | null;
+  risk_stop_pct: number | null;
+  risk_action: RiskAction | null;
+  risk_base_equity: number | null;
+  risk_triggered_at: string | null;
 }
 
 export function MyAccountsPage({ role, userId }: { role: 'client' | 'agent'; userId: string | null }) {
@@ -35,7 +40,7 @@ export function MyAccountsPage({ role, userId }: { role: 'client' | 'agent'; use
     if (linked.linked.own.length) {
       const { data, error: accErr } = await supabase
         .from('accounts')
-        .select('account_name, broker, platform, balance, equity, last_seen')
+        .select('account_name, broker, platform, balance, equity, last_seen, risk_stop_pct, risk_action, risk_base_equity, risk_triggered_at')
         .in('account_name', linked.linked.own)
         .order('account_name');
       if (accErr) err = 'Could not load your accounts. 未能載入您的帳戶。';
@@ -107,6 +112,20 @@ export function MyAccountsPage({ role, userId }: { role: 'client' | 'agent'; use
                     <p className="text-white font-semibold">{formatCurrency(a.equity ?? 0)}</p>
                   </div>
                 </div>
+                {a.risk_stop_pct != null && a.risk_action && (
+                  <div className={`mt-4 rounded-lg border px-3 py-2 text-xs ${a.risk_triggered_at ? 'border-red-500/40 bg-red-500/10 text-red-300' : 'border-amber-500/30 bg-amber-500/5 text-amber-200'}`}>
+                    <p className="flex items-center gap-1.5 font-medium">
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      {a.risk_triggered_at ? `Stop-loss hit 已觸發止損 · ${timeAgo(a.risk_triggered_at)}` : `Stop-loss 止損 ${a.risk_stop_pct}%`}
+                    </p>
+                    <p className="mt-0.5 text-slate-400">
+                      {RISK_ACTION_LABELS[a.risk_action].title}
+                      {a.risk_base_equity
+                        ? ` · Stops at 止損位 ${formatCurrency(a.risk_base_equity * (1 - a.risk_stop_pct / 100))}`
+                        : ' · Starts after first connection 首次連線後生效'}
+                    </p>
+                  </div>
+                )}
                 <p className="text-slate-500 text-xs mt-3">Last seen 最後連線: {timeAgo(a.last_seen)}</p>
               </div>
             );

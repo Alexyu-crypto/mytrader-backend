@@ -2,6 +2,13 @@ import { supabase } from '@/lib/supabase';
 
 export type AccountRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
+export type RiskAction = 'stop_new' | 'close_all';
+
+export const RISK_ACTION_LABELS: Record<RiskAction, { title: string; desc: string }> = {
+  stop_new: { title: 'Stop new copies 停止開新跟單', desc: 'Keep existing positions 保留現有倉位' },
+  close_all: { title: 'Stop & close all 停止跟單 即時平倉', desc: 'Close every open position now 立即平掉所有倉位' },
+};
+
 export interface AccountRequest {
   id: string;
   requested_by: string;
@@ -13,6 +20,8 @@ export interface AccountRequest {
   platform: 'MT4' | 'MT5';
   account_name: string;
   master_account: string;
+  risk_stop_pct: number | null;
+  risk_action: RiskAction | null;
   status: AccountRequestStatus;
   review_note: string;
   reviewed_at: string | null;
@@ -28,9 +37,11 @@ export interface AccountRequestInput {
   masterAccount: string;
   password: string;
   forUserId: string | null;
+  riskPct: number | null;
+  riskAction: RiskAction | null;
 }
 
-const COLUMNS = 'id, requested_by, for_user_id, holder_name, account_number, broker, broker_server, platform, account_name, master_account, status, review_note, reviewed_at, created_at';
+const COLUMNS = 'id, requested_by, for_user_id, holder_name, account_number, broker, broker_server, platform, account_name, master_account, risk_stop_pct, risk_action, status, review_note, reviewed_at, created_at';
 
 const ERRORS: Record<string, string> = {
   not_allowed: 'Your role cannot add accounts. 您的角色不能新增帳戶。',
@@ -44,6 +55,7 @@ const ERRORS: Record<string, string> = {
   invalid_master: 'Please choose a valid master account. 請選擇有效的主帳戶。',
   name_too_long: 'Account name is too long. Use a shorter broker name. 帳戶名稱太長，請縮短經紀商名稱。',
   already_exists: 'This account already exists or is waiting for approval. 此帳戶已存在或正在等待審批。',
+  invalid_risk: 'Stop-loss must be between 0.01% and 100%, with an action chosen. 止損須介乎 0.01% 至 100%，並選擇執行方式。',
   not_pending: 'This request is no longer pending. 此申請已不在待審批狀態。',
 };
 
@@ -70,6 +82,8 @@ export async function submitAccountRequest(input: AccountRequestInput): Promise<
     p_master_account: input.masterAccount,
     p_password: input.password,
     p_for_user: input.forUserId,
+    p_risk_pct: input.riskPct,
+    p_risk_action: input.riskAction,
   });
   return error ? friendly(error.message) : null;
 }

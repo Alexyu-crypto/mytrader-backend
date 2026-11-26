@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { X, Eye, EyeOff, Loader2, Download, ShieldCheck } from 'lucide-react';
+import { X, Eye, EyeOff, Loader2, Download, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { buildAccountName, MAX_ACCOUNT_NAME_LENGTH } from '@/lib/accountImport';
 import { fetchAgentClients, type AgentClient } from '@/lib/agents';
-import { submitAccountRequest } from '@/lib/accountRequests';
+import { submitAccountRequest, RISK_ACTION_LABELS, type RiskAction } from '@/lib/accountRequests';
 
 const inputCls = 'w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 transition-colors';
 
@@ -33,6 +33,9 @@ export function RequestAccountDialog({ isAgent, masters, onClose, onSubmitted }:
   const [masterAccount, setMasterAccount] = useState(masters[0] ?? '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [riskOn, setRiskOn] = useState(true);
+  const [riskPct, setRiskPct] = useState('');
+  const [riskAction, setRiskAction] = useState<RiskAction>('stop_new');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -61,10 +64,17 @@ export function RequestAccountDialog({ isAgent, masters, onClose, onSubmitted }:
       setError('Please choose a master account to follow. 請選擇要跟隨的主帳戶。');
       return;
     }
+    const pct = Number(riskPct);
+    if (riskOn && (!riskPct || !Number.isFinite(pct) || pct <= 0 || pct > 100)) {
+      setError('Enter a stop-loss between 0.01% and 100%. 請輸入 0.01% 至 100% 的止損。');
+      return;
+    }
     setSaving(true);
     const err = await submitAccountRequest({
       holderName, accountNumber, broker, brokerServer, platform, masterAccount, password,
       forUserId: isAgent && forUserId ? forUserId : null,
+      riskPct: riskOn ? pct : null,
+      riskAction: riskOn ? riskAction : null,
     });
     setSaving(false);
     if (err) {
@@ -147,6 +157,52 @@ export function RequestAccountDialog({ isAgent, masters, onClose, onSubmitted }:
               {masters.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </Field>
+
+          <section className={`rounded-xl border p-4 transition-colors ${riskOn ? 'border-amber-500/30 bg-amber-500/5' : 'border-slate-700 bg-slate-900/40'}`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className={`w-4 h-4 ${riskOn ? 'text-amber-400' : 'text-slate-500'}`} />
+                <span className="text-white text-sm font-semibold">Risk settings 風控設定</span>
+              </div>
+              <button type="button" role="switch" aria-checked={riskOn} onClick={() => setRiskOn((v) => !v)}
+                className={`relative w-10 h-6 rounded-full transition-colors ${riskOn ? 'bg-amber-500' : 'bg-slate-700'}`}>
+                <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${riskOn ? 'translate-x-4' : ''}`} />
+              </button>
+            </div>
+
+            {riskOn ? (
+              <div className="mt-4 space-y-3">
+                <Field label="Stop-loss 止損 % *" hint="Measured from the starting balance when the account first connects. 以帳戶首次連線時的結餘計算。">
+                  <div className="relative">
+                    <input value={riskPct} onChange={(e) => setRiskPct(e.target.value.replace(/[^0-9.]/g, '').slice(0, 6))} inputMode="decimal" placeholder="e.g. 30" className={`${inputCls} pr-9`} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">%</span>
+                  </div>
+                </Field>
+                <div>
+                  <span className="block text-slate-400 text-sm font-medium mb-1">When reached 到達後</span>
+                  <div className="space-y-2">
+                    {(Object.keys(RISK_ACTION_LABELS) as RiskAction[]).map((key, i) => {
+                      const active = riskAction === key;
+                      return (
+                        <button key={key} type="button" onClick={() => setRiskAction(key)} aria-pressed={active}
+                          className={`w-full flex items-start gap-3 text-left rounded-lg border px-3 py-2.5 transition-colors ${active ? (key === 'close_all' ? 'border-red-500/50 bg-red-500/10' : 'border-amber-500/50 bg-amber-500/10') : 'border-slate-700 bg-slate-900 hover:border-slate-500'}`}>
+                          <span className={`mt-0.5 w-4 h-4 shrink-0 rounded-full border-2 flex items-center justify-center ${active ? (key === 'close_all' ? 'border-red-400' : 'border-amber-400') : 'border-slate-600'}`}>
+                            {active && <span className={`w-1.5 h-1.5 rounded-full ${key === 'close_all' ? 'bg-red-400' : 'bg-amber-400'}`} />}
+                          </span>
+                          <span>
+                            <span className="block text-white text-sm font-medium">{i + 1}. {RISK_ACTION_LABELS[key].title}</span>
+                            <span className="block text-slate-400 text-xs mt-0.5">{RISK_ACTION_LABELS[key].desc}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-2 text-slate-500 text-xs">No automatic stop-loss. 不設自動止損。</p>
+            )}
+          </section>
 
           {accountName.split('-').length >= 4 && (
             <div className={`rounded-lg border px-3 py-2 text-xs ${tooLong ? 'border-red-500/40 bg-red-500/10 text-red-300' : 'border-slate-700 bg-slate-900 text-slate-400'}`}>

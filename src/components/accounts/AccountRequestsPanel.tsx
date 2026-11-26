@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Check, X, Loader2, Clock, CheckCircle2, XCircle, Ban } from 'lucide-react';
+import { Check, X, Loader2, Clock, CheckCircle2, XCircle, Ban, ShieldAlert } from 'lucide-react';
 import { useConfirm, useNotice } from '@/hooks/useConfirm';
-import { cancelAccountRequest, fetchAccountRequests, reviewAccountRequest, type AccountRequest, type AccountRequestStatus } from '@/lib/accountRequests';
+import { cancelAccountRequest, fetchAccountRequests, reviewAccountRequest, RISK_ACTION_LABELS, type AccountRequest, type AccountRequestStatus } from '@/lib/accountRequests';
 import { timeAgo } from '@/lib/format';
 
 const STATUS: Record<AccountRequestStatus, { label: string; cls: string; Icon: typeof Clock }> = {
@@ -81,6 +81,12 @@ export function AccountRequestsPanel({ mode, userId, version, onApproved }: {
                 <p className="font-mono text-white text-sm truncate">{r.account_name}</p>
                 <p className="text-slate-400 text-xs mt-0.5">
                   {r.holder_name} · {r.broker}{r.broker_server ? ` · ${r.broker_server}` : ''} · {r.platform} · EA · Follows 跟隨 <span className="font-mono text-slate-300">{r.master_account}</span>
+                </p>
+                <p className={`text-xs mt-0.5 inline-flex items-center gap-1 ${r.risk_stop_pct != null ? 'text-amber-300' : 'text-slate-500'}`}>
+                  <ShieldAlert className="w-3 h-3" />
+                  {r.risk_stop_pct != null && r.risk_action
+                    ? `Stop-loss 止損 ${r.risk_stop_pct}% → ${RISK_ACTION_LABELS[r.risk_action].title}`
+                    : 'No stop-loss 未設止損'}
                 </p>
                 <p className="text-slate-500 text-xs mt-0.5">
                   {timeAgo(r.created_at)}
