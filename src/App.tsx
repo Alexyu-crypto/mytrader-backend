@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Layout, PAGE_KEYS, visiblePages, type PageKey } from '@/components/Layout';
 import { Dashboard } from '@/pages/Dashboard';
 import { Accounts, type AccountPrefill } from '@/pages/Accounts';
+import { MyAccountsPage } from '@/pages/MyAccounts';
 import { LivePositions } from '@/pages/LivePositions';
 import { History } from '@/pages/History';
 import { CopyGroupsPage } from '@/pages/CopyGroups';
@@ -138,7 +139,8 @@ function App() {
     <Layout current={current} onNavigate={navigate} email={auth.email} role={auth.role} onSignOut={auth.signOut} badges={{ users: openCopyRequests, health: isOperator ? missedAlarm.missed.length : 0, ib: ibFollowUps.due }} brand={myBrand.brand}>
       {current === 'dashboard' && <Dashboard canEdit={canEdit} isAdmin={auth.role === 'admin'} />}
       {current === 'signals' && <Signals userId={auth.userId} email={auth.email} showEas={auth.status === 'active' && (auth.role === 'admin' || auth.role === 'trader')} />}
-      {current === 'accounts' && <Accounts canEdit={canEdit} selfService={auth.role === 'client' || auth.role === 'agent' ? auth.role : null} userId={auth.userId} prefill={accountPrefill} onPrefillUsed={clearAccountPrefill} />}
+      {current === 'accounts' && <Accounts canEdit={canEdit} prefill={accountPrefill} onPrefillUsed={clearAccountPrefill} />}
+      {current === 'my-accounts' && (auth.role === 'client' || auth.role === 'agent') && <MyAccountsPage role={auth.role} userId={auth.userId} />}
       {current === 'positions' && <LivePositions canEdit={canEdit} clientView={scopedView} />}
       {current === 'history' && <History clientView={scopedView} />}
       {current === 'desk' && canEdit && <TradingDesk />}

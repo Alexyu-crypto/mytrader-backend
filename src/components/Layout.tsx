@@ -1,18 +1,19 @@
 import { useState } from 'react';
-import { LayoutDashboard, LayoutGrid, Users, CandlestickChart, History as HistoryIcon, Activity, BookOpen, Menu, X, LogOut, ShieldCheck, Radio, Handshake, Store, Gem, Layers, Landmark, Briefcase, UserRoundPlus, Scale, ArrowLeftRight, MonitorDown, MonitorUp, FolderArchive, Server, Cloud } from 'lucide-react';
+import { LayoutDashboard, LayoutGrid, Users, CandlestickChart, History as HistoryIcon, Activity, BookOpen, Menu, X, LogOut, ShieldCheck, Radio, Handshake, Store, Gem, Layers, Landmark, Briefcase, UserRoundPlus, Scale, ArrowLeftRight, MonitorDown, MonitorUp, FolderArchive, Server, Cloud, Wallet } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { LanguageMenu } from '@/components/LanguageMenu';
 import { BrandMark } from '@/components/agents/BrandMark';
 import { ROLE_LABEL, type Role } from '@/hooks/useAuth';
 import type { MyBrand } from '@/lib/agents';
 
-export type PageKey = 'dashboard' | 'signals' | 'accounts' | 'positions' | 'history' | 'funding' | 'funding-history' | 'copy-groups' | 'health' | 'manual' | 'users' | 'agent' | 'partner' | 'membership' | 'ib' | 'opening' | 'rebates' | 'pc-setup' | 'broker-files' | 'desk' | 'trader-manager' | 'vds' | 'metaapi';
+export type PageKey = 'dashboard' | 'signals' | 'accounts' | 'positions' | 'history' | 'funding' | 'funding-history' | 'copy-groups' | 'health' | 'manual' | 'users' | 'agent' | 'partner' | 'membership' | 'ib' | 'opening' | 'rebates' | 'pc-setup' | 'broker-files' | 'desk' | 'trader-manager' | 'vds' | 'metaapi' | 'my-accounts';
 
-export const PAGE_KEYS: PageKey[] = ['dashboard', 'signals', 'accounts', 'positions', 'history', 'funding', 'funding-history', 'ib', 'opening', 'rebates', 'copy-groups', 'vds', 'metaapi', 'health', 'manual', 'users', 'agent', 'partner', 'membership', 'pc-setup', 'broker-files', 'desk', 'trader-manager'];
+export const PAGE_KEYS: PageKey[] = ['dashboard', 'signals', 'accounts', 'positions', 'history', 'funding', 'funding-history', 'ib', 'opening', 'rebates', 'copy-groups', 'vds', 'metaapi', 'health', 'manual', 'users', 'agent', 'partner', 'membership', 'pc-setup', 'broker-files', 'desk', 'trader-manager', 'my-accounts'];
 
 const NAV_ITEMS: { key: PageKey; label: string; icon: typeof LayoutDashboard }[] = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'signals', label: 'Signals · 交易信號', icon: Radio },
+  { key: 'my-accounts', label: 'My Accounts · 我的帳戶', icon: Wallet },
   { key: 'accounts', label: 'Accounts', icon: Users },
   { key: 'positions', label: 'Live Positions', icon: CandlestickChart },
   { key: 'desk', label: 'Trading Desk · 交易台', icon: MonitorUp },
@@ -37,8 +38,8 @@ const NAV_ITEMS: { key: PageKey; label: string; icon: typeof LayoutDashboard }[]
 ];
 
 export function visiblePages(role: Role): PageKey[] {
-  if (role === 'client') return ['signals', 'positions', 'history', 'pc-setup', 'manual', 'membership', 'partner'];
-  if (role === 'agent') return ['agent', 'signals', 'positions', 'history', 'pc-setup', 'manual', 'membership'];
+  if (role === 'client') return ['signals', 'my-accounts', 'positions', 'history', 'pc-setup', 'manual', 'membership', 'partner'];
+  if (role === 'agent') return ['agent', 'signals', 'my-accounts', 'positions', 'history', 'pc-setup', 'manual', 'membership'];
   if (role === 'finance') return ['funding', 'funding-history', 'rebates'];
   if (role === 'ib_manager') return ['ib', 'opening', 'rebates'];
   if (role === 'account_opening') return ['opening'];

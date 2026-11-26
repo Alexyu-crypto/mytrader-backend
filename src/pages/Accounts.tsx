@@ -23,7 +23,6 @@ import { ScrollRows } from '@/components/ScrollRows';
 import { fetchBridgeKey } from '@/lib/bridgeKeys';
 import { loadServerChoices, type ServerChoice } from '@/lib/brokerFiles';
 import { ServerSearch } from '@/components/metaapi/ServerSearch';
-import { RequestAccountDialog } from '@/components/accounts/RequestAccountDialog';
 import { AccountRequestsPanel } from '@/components/accounts/AccountRequestsPanel';
 
 function escapeMqlString(value: string): string {
@@ -102,16 +101,8 @@ function SortTh({ label, sortKey, active, direction, onSort, align = 'left' }: {
 
 export type AccountPrefill = { holderName: string; accountNumber: string; broker: string; platform: 'MT4' | 'MT5' };
 
-export function Accounts({ canEdit, selfService = null, userId = null, prefill, onPrefillUsed }: {
-  canEdit: boolean;
-  selfService?: 'client' | 'agent' | null;
-  userId?: string | null;
-  prefill?: AccountPrefill | null;
-  onPrefillUsed?: () => void;
-}) {
+export function Accounts({ canEdit, prefill, onPrefillUsed }: { canEdit: boolean; prefill?: AccountPrefill | null; onPrefillUsed?: () => void }) {
   const { accounts, loading, reload } = useAccounts();
-  const [showRequest, setShowRequest] = useState(false);
-  const [requestsVersion, setRequestsVersion] = useState(0);
   const confirmAsk = useConfirm();
   const notify = useNotice();
   const [showModal, setShowModal] = useState(false);
@@ -332,33 +323,10 @@ export function Accounts({ canEdit, selfService = null, userId = null, prefill, 
               </IconButton>
             </>
           )}
-          {selfService && (
-            <button
-              onClick={() => setShowRequest(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-semibold transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Add account 新增帳戶
-            </button>
-          )}
         </div>
       </div>
 
-      {(canEdit || selfService) && (
-        <AccountRequestsPanel mode={canEdit ? 'operator' : 'self'} userId={userId} version={requestsVersion} onApproved={reload} />
-      )}
-      {showRequest && selfService && (
-        <RequestAccountDialog
-          isAgent={selfService === 'agent'}
-          masters={accounts.filter((a) => a.type === 'master').map((a) => a.account_name).sort()}
-          onClose={() => setShowRequest(false)}
-          onSubmitted={() => {
-            setShowRequest(false);
-            setRequestsVersion((v) => v + 1);
-            void notify('Submitted. An admin will review it before copying starts. 已提交，管理員批准後才會開始跟單。', { tone: 'success', title: 'Request sent · 已提交' });
-          }}
-        />
-      )}
+      {canEdit && <AccountRequestsPanel mode="operator" userId={null} version={0} onApproved={reload} />}
 
       {/* EA Downloads */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
