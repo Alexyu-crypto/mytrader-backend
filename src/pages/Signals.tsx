@@ -15,6 +15,7 @@ import { ShareButton } from '@/components/share/ShareMenu';
 import { siteShare } from '@/lib/share';
 import { useShareSlug } from '@/hooks/useShareSlug';
 import { EaDownloads } from '@/components/signals/EaDownloads';
+import { SignalIntroDialog } from '@/components/signals/SignalIntroDialog';
 
 type SortKey = 'profit' | 'drawdown' | 'weeks' | 'equity';
 
@@ -27,8 +28,10 @@ const SORTS: [SortKey, string][] = [
 
 type History = Record<string, { trades: TradeHistory[]; ops: BalanceOperation[] }>;
 
-export function Signals({ userId, email, showEas }: { userId: string; email: string; showEas: boolean }) {
+export function Signals({ userId, email, showEas, isAdmin }: { userId: string; email: string; showEas: boolean; isAdmin: boolean }) {
   const [tab, setTab] = useState<'signals' | 'eas'>('signals');
+  const [introEdits, setIntroEdits] = useState<Record<string, string>>({});
+  const [editIntroName, setEditIntroName] = useState<string | null>(null);
   const { accounts, loading: accountsLoading } = useAccounts();
   const shareSlug = useShareSlug();
   const { positions } = useLivePositions();
@@ -72,11 +75,12 @@ export function Signals({ userId, email, showEas }: { userId: string; email: str
   const signals = useMemo<Signal[]>(() => {
     if (!history) return [];
     return masters.map((account) => {
-      const own = positions.filter((p) => p.account_name === account.account_name);
-      const h = history[account.account_name] ?? { trades: [], ops: [] };
-      return { account, perf: computePerformance(account, h.trades, h.ops, own), openCount: own.length };
+      const name = account.account_name;
+      const own = positions.filter((p) => p.account_name === name);
+      const h = history[name] ?? { trades: [], ops: [] };
+      return { account: name in introEdits ? { ...account, signal_intro: introEdits[name] || null } : account, perf: computePerformance(account, h.trades, h.ops, own), openCount: own.length };
     });
-  }, [masters, positions, history]);
+  }, [masters, positions, history, introEdits]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -93,6 +97,7 @@ export function Signals({ userId, email, showEas }: { userId: string; email: str
   const liveCount = masters.filter((m) => isOnline(m.last_seen)).length;
   const opened = signals.find((s) => s.account.account_name === openName) ?? null;
   const applying = signals.find((s) => s.account.account_name === applyName) ?? null;
+  const editingIntro = signals.find((s) => s.account.account_name === editIntroName) ?? null;
   const loading = accountsLoading || (!history && !error);
 
   return (
@@ -213,6 +218,7 @@ export function Signals({ userId, email, showEas }: { userId: string; email: str
                 request={openByMaster.get(s.account.account_name)}
                 onOpen={() => setOpenName(s.account.account_name)}
                 onCopy={() => setApplyName(s.account.account_name)}
+                onEditIntro={isAdmin ? () => setEditIntroName(s.account.account_name) : undefined}
               />
             </div>
           ))}
@@ -230,6 +236,14 @@ export function Signals({ userId, email, showEas }: { userId: string; email: str
         />
       )}
       {applying && <CopyRequestDialog signal={applying} email={email} onClose={() => setApplyName(null)} onSent={reloadRequests} />}
+      {editingIntro && (
+        <SignalIntroDialog
+          accountName={editingIntro.account.account_name}
+          initial={editingIntro.account.signal_intro ?? ''}
+          onClose={() => setEditIntroName(null)}
+          onSaved={(text) => setIntroEdits((prev) => ({ ...prev, [editingIntro.account.account_name]: text }))}
+        />
+      )}
     </div>
   );
 }

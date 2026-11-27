@@ -147,7 +147,7 @@ function App() {
   return withShareSlug(
     <Layout current={current} onNavigate={navigate} email={auth.email} role={auth.role} onSignOut={auth.signOut} badges={{ users: openCopyRequests, health: isOperator ? missedAlarm.missed.length : 0, ib: ibFollowUps.due }} brand={myBrand.brand}>
       {current === 'dashboard' && <Dashboard canEdit={canEdit} isAdmin={auth.role === 'admin'} />}
-      {current === 'signals' && <Signals userId={auth.userId} email={auth.email} showEas={auth.status === 'active' && (auth.role === 'admin' || auth.role === 'trader')} />}
+      {current === 'signals' && <Signals userId={auth.userId} email={auth.email} showEas={auth.status === 'active' && (auth.role === 'admin' || auth.role === 'trader')} isAdmin={isAdmin} />}
       {current === 'accounts' && <Accounts canEdit={canEdit} prefill={accountPrefill} onPrefillUsed={clearAccountPrefill} />}
       {current === 'my-accounts' && (auth.role === 'client' || auth.role === 'agent') && <MyAccountsPage role={auth.role} userId={auth.userId} />}
       {current === 'positions' && <LivePositions canEdit={canEdit} clientView={scopedView} />}

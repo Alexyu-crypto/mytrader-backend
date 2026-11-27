@@ -1,4 +1,4 @@
-import { Activity, ArrowUpRight, CalendarDays, Copy, TrendingDown } from 'lucide-react';
+import { Activity, ArrowUpRight, CalendarDays, Copy, PencilLine, Scale } from 'lucide-react';
 import type { Account } from '@/lib/types';
 import type { CurvePoint, Performance } from '@/lib/performance';
 import { formatCurrency, isOnline } from '@/lib/format';
@@ -88,7 +88,9 @@ export function CopyAction({ request, onCopy, size = 'sm' }: { request?: CopyReq
   );
 }
 
-export function SignalCard({ signal, rank, request, onOpen, onCopy }: { signal: Signal; rank: number; request?: CopyRequest; onOpen: () => void; onCopy: () => void }) {
+export const profitFactorText = (perf: Performance) => (perf.profitFactor === null ? '—' : perf.profitFactor.toFixed(2));
+
+export function SignalCard({ signal, rank, request, onOpen, onCopy, onEditIntro }: { signal: Signal; rank: number; request?: CopyRequest; onOpen: () => void; onCopy: () => void; onEditIntro?: () => void }) {
   const { account, perf } = signal;
   const shareSlug = useShareSlug();
   const up = perf.netProfit >= 0;
@@ -113,6 +115,12 @@ export function SignalCard({ signal, rank, request, onOpen, onCopy }: { signal: 
           </div>
           <span className="rounded-md bg-slate-900/70 px-2 py-0.5 text-[11px] font-medium tabular-nums text-slate-400">#{rank}</span>
         </div>
+
+        {account.signal_intro && (
+          <p translate="no" className="notranslate mt-3 line-clamp-3 whitespace-pre-line text-xs leading-relaxed text-slate-300">
+            {account.signal_intro}
+          </p>
+        )}
 
         <div className="mt-4 flex items-end justify-between gap-3">
           <div>
@@ -141,10 +149,10 @@ export function SignalCard({ signal, rank, request, onOpen, onCopy }: { signal: 
           </div>
           <div>
             <p className="flex items-center gap-1 text-slate-500">
-              <TrendingDown className="h-3 w-3" />
-              Max DD 回撤
+              <Scale className="h-3 w-3" />
+              PF 盈利因子
             </p>
-            <p className="mt-0.5 font-semibold tabular-nums text-white">{perf.maxDrawdownPct.toFixed(1)}%</p>
+            <p className="mt-0.5 font-semibold tabular-nums text-white">{profitFactorText(perf)}</p>
           </div>
           <div>
             <p className="flex items-center gap-1 text-slate-500">
@@ -161,6 +169,16 @@ export function SignalCard({ signal, rank, request, onOpen, onCopy }: { signal: 
           Equity 淨值 <span className="font-medium tabular-nums text-slate-300">{formatCurrency(account.equity || 0)}</span>
         </p>
         <div className="flex shrink-0 items-center gap-2">
+          {onEditIntro && (
+            <button
+              onClick={onEditIntro}
+              aria-label="Edit intro 編輯介紹"
+              title="Edit intro 編輯介紹"
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-700/60 hover:text-cyan-300"
+            >
+              <PencilLine className="h-4 w-4" />
+            </button>
+          )}
           <ShareButton variant="icon" label="Share signal · 分享信號" {...signalShare(signal, shareSlug)} />
           <CopyAction request={request} onCopy={onCopy} />
         </div>

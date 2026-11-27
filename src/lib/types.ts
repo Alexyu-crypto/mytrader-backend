@@ -38,6 +38,7 @@ export interface Account {
   reconnect_requested_at?: string | null;
   reconnect_picked_at?: string | null;
   reconnect_done_at?: string | null;
+  signal_intro?: string | null;
 }
 
 export interface AccountSnapshot {

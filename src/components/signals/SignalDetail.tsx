@@ -4,7 +4,7 @@ import { buildSignalAnalysis, signalVerdict, type Verdict } from '@/lib/signalAn
 import { BarChart, ProfitChart } from '@/components/report/ReportCharts';
 import { formatCurrency, isOnline, timeAgo } from '@/lib/format';
 import { formatDuration } from '@/lib/performance';
-import { CopyAction, initials, pct, StyleTag, weeksRunning, type Signal } from '@/components/signals/SignalCard';
+import { CopyAction, initials, pct, profitFactorText, StyleTag, weeksRunning, type Signal } from '@/components/signals/SignalCard';
 import type { CopyRequest } from '@/lib/copyRequests';
 import { ShareButton } from '@/components/share/ShareMenu';
 import { signalShare } from '@/components/signals/signalShare';
@@ -35,9 +35,8 @@ export function SignalDetail({ signal, request, onCopy, onClose }: { signal: Sig
 
   const stats: [string, string][] = [
     ['Weeks running 運行週數', String(weeksRunning(perf, account))],
-    ['Max drawdown 最大回撤', `${perf.maxDrawdownPct.toFixed(2)}%`],
+    ['Profit factor 盈利因子', profitFactorText(perf)],
     ['Win rate 勝率', `${perf.winRate.toFixed(1)}%`],
-    ['Profit factor 獲利因子', perf.profitFactor === null ? '—' : perf.profitFactor.toFixed(2)],
     ['Trades 交易數', perf.totalTrades.toLocaleString('en-US')],
     ['Avg holding 平均持倉', formatDuration(perf.avgHoldMs)],
     ['Balance 結餘', formatCurrency(account.balance || 0)],
@@ -73,6 +72,11 @@ export function SignalDetail({ signal, request, onCopy, onClose }: { signal: Sig
         </header>
 
         <div className="space-y-6 p-6">
+          {account.signal_intro && (
+            <p translate="no" className="notranslate whitespace-pre-line rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm leading-relaxed text-slate-200">
+              {account.signal_intro}
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-slate-700/80 bg-slate-800/40 p-4">
               <p className="text-xs text-slate-500">P&L % 盈虧率</p>
