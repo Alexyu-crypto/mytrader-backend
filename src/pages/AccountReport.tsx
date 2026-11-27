@@ -14,7 +14,7 @@ import { fetchBalanceOperations, fetchTradeHistory } from '@/lib/accountData';
 import { ShareButton } from '@/components/share/ShareMenu';
 import { signalShare } from '@/components/signals/signalShare';
 import { exportHistoryWorkbook } from '@/lib/historyExport';
-import { buildSummary, computePerformance, formatDuration } from '@/lib/performance';
+import { buildSummary, computePerformance, countOpens, formatDuration } from '@/lib/performance';
 import { buildOutlook, buildVision, buildVisionQuote, type Bilingual } from '@/lib/reportNarrative';
 import { formatCurrency, isOnline, timeAgo } from '@/lib/format';
 import type { BalanceOperation, TradeHistory } from '@/lib/types';
@@ -245,7 +245,7 @@ export function AccountReport({ accountName, brandSlug, viewerAccess }: { accoun
                 Join {brand.brand_name} 加入
               </a>
             )}
-            <ShareButton variant="icon" label="Share report · 分享報告" className="h-10 w-10" {...signalShare({ account, perf, openCount: positions.length }, shareSlug)} heading="Share this report 分享報告" />
+            <ShareButton variant="icon" label="Share report · 分享報告" className="h-10 w-10" {...signalShare({ account, perf, openCount: positions.length, ...countOpens(trades, positions) }, shareSlug)} heading="Share this report 分享報告" />
             <IconButton label="Print / PDF · 列印" size="md" onClick={() => window.print()}>
               <Printer className="w-4 h-4" />
             </IconButton>

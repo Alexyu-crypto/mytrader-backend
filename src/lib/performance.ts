@@ -1,6 +1,15 @@
 import type { Account, BalanceOperation, LivePosition, TradeHistory } from '@/lib/types';
 import { netOf } from '@/lib/accountData';
 
+export function countOpens(trades: TradeHistory[], positions: LivePosition[]): { todayOpens: number; totalOpens: number } {
+  const todayStart = new Date().setHours(0, 0, 0, 0);
+  const isToday = (t: string | null) => !!t && new Date(t).getTime() >= todayStart;
+  return {
+    todayOpens: trades.filter((t) => isToday(t.open_time)).length + positions.filter((p) => isToday(p.open_time)).length,
+    totalOpens: trades.length + positions.length,
+  };
+}
+
 export interface CurvePoint {
   time: number;
   balance: number;

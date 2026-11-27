@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Download, Radio, RefreshCw, Search } from 'lucide-react';
 import { useAccounts, useLivePositions } from '@/hooks/useRealtime';
 import { fetchBalanceOperations, fetchTradeHistory } from '@/lib/accountData';
-import { computePerformance } from '@/lib/performance';
+import { computePerformance, countOpens } from '@/lib/performance';
 import { isOnline } from '@/lib/format';
 import type { BalanceOperation, TradeHistory } from '@/lib/types';
 import { SignalCard, weeksRunning, type Signal } from '@/components/signals/SignalCard';
@@ -79,7 +79,12 @@ export function Signals({ userId, email, showEas, isAdmin }: { userId: string; e
       const name = account.account_name;
       const own = positions.filter((p) => p.account_name === name);
       const h = history[name] ?? { trades: [], ops: [] };
-      return { account: name in introEdits ? { ...account, signal_intro: introEdits[name] || null } : account, perf: computePerformance(account, h.trades, h.ops, own), openCount: own.length };
+      return {
+        account: name in introEdits ? { ...account, signal_intro: introEdits[name] || null } : account,
+        perf: computePerformance(account, h.trades, h.ops, own),
+        openCount: own.length,
+        ...countOpens(h.trades, own),
+      };
     });
   }, [masters, positions, history, introEdits]);
 

@@ -16,7 +16,7 @@ export function signalShare(signal: Signal, agentSlug?: string | null): SharePro
       url: reportUrl(account.account_name, agentSlug),
       campaign: 'signal_share',
       title: `${account.account_name} · ${headline}`,
-      text: `${account.account_name} trading signal: ${headline}, profit factor ${pf}, ${perf.winRate.toFixed(0)}% win rate over ${weeks} weeks. 交易信號：${headlineZh}，盈利因子 ${pf}，勝率 ${perf.winRate.toFixed(0)}%。`,
+      text: `${account.account_name} trading signal: ${headline}, profit factor ${pf}, ${signal.totalOpens} trades opened over ${weeks} weeks. 交易信號：${headlineZh}，盈利因子 ${pf}，總開單 ${signal.totalOpens} 次。`,
     },
     note: account.report_public
       ? undefined
@@ -33,9 +33,9 @@ export function signalShare(signal: Signal, agentSlug?: string | null): SharePro
           curve: perf.curve.map((p) => p.growth),
           stats: [
             ['Profit factor 盈利因子', pf],
-            ['Win rate 勝率', `${perf.winRate.toFixed(0)}%`],
+            ['Today 今日開單', String(signal.todayOpens)],
             ['Weeks 週數', String(weeks)],
-            ['Trades 交易', perf.totalTrades.toLocaleString('en-US')],
+            ['Total 總開單', signal.totalOpens.toLocaleString('en-US')],
           ],
           footer: 'Past performance is not indicative of future results. 過往表現不代表將來回報。',
         });

@@ -20,7 +20,7 @@ const VERDICT_STYLE: Record<Verdict, [string, string]> = {
 const monthLabel = (key: string) => new Date(`${key}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
 export function SignalDetail({ signal, request, onCopy, onClose }: { signal: Signal; request?: CopyRequest; onCopy: () => void; onClose: () => void }) {
-  const { account, perf, openCount } = signal;
+  const { account, perf, openCount, todayOpens, totalOpens } = signal;
   const shareSlug = useShareSlug();
   const online = isOnline(account.last_seen);
   const [lang, setLang] = useState<'en' | 'zh'>('zh');
@@ -36,8 +36,8 @@ export function SignalDetail({ signal, request, onCopy, onClose }: { signal: Sig
   const stats: [string, string][] = [
     ['Weeks running 運行週數', String(weeksRunning(perf, account))],
     ['Profit factor 盈利因子', profitFactorText(perf)],
-    ['Win rate 勝率', `${perf.winRate.toFixed(1)}%`],
-    ['Trades 交易數', perf.totalTrades.toLocaleString('en-US')],
+    ['Today opens 今日開單次數', todayOpens.toLocaleString('en-US')],
+    ['Total opens 總開單次數', totalOpens.toLocaleString('en-US')],
     ['Avg holding 平均持倉', formatDuration(perf.avgHoldMs)],
     ['Balance 結餘', formatCurrency(account.balance || 0)],
     ['Equity 淨值', formatCurrency(account.equity || 0)],

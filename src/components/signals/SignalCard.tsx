@@ -1,4 +1,4 @@
-import { Activity, ArrowUpRight, CalendarDays, Copy, PencilLine, Scale } from 'lucide-react';
+import { ArrowUpRight, CalendarDays, Copy, Layers, PencilLine, Scale, Zap } from 'lucide-react';
 import type { Account } from '@/lib/types';
 import type { CurvePoint, Performance } from '@/lib/performance';
 import { formatCurrency, isOnline } from '@/lib/format';
@@ -11,6 +11,8 @@ export interface Signal {
   account: Account;
   perf: Performance;
   openCount: number;
+  todayOpens: number;
+  totalOpens: number;
 }
 
 const WEEK_MS = 7 * 24 * 3600 * 1000;
@@ -139,7 +141,7 @@ export function SignalCard({ signal, rank, request, onOpen, onCopy, onEditIntro 
           <Sparkline curve={perf.curve} up={up} />
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-2 border-t border-slate-700/60 pt-3 text-xs">
+        <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-3 border-t border-slate-700/60 pt-3 text-xs">
           <div>
             <p className="flex items-center gap-1 text-slate-500">
               <CalendarDays className="h-3 w-3" />
@@ -156,10 +158,17 @@ export function SignalCard({ signal, rank, request, onOpen, onCopy, onEditIntro 
           </div>
           <div>
             <p className="flex items-center gap-1 text-slate-500">
-              <Activity className="h-3 w-3" />
-              Win 勝率
+              <Zap className="h-3 w-3" />
+              Today 今日開單
             </p>
-            <p className="mt-0.5 font-semibold tabular-nums text-white">{perf.winRate.toFixed(0)}%</p>
+            <p className={`mt-0.5 font-semibold tabular-nums ${signal.todayOpens > 0 ? 'text-cyan-300' : 'text-white'}`}>{signal.todayOpens.toLocaleString('en-US')}</p>
+          </div>
+          <div>
+            <p className="flex items-center gap-1 text-slate-500">
+              <Layers className="h-3 w-3" />
+              Total 總開單
+            </p>
+            <p className="mt-0.5 font-semibold tabular-nums text-white">{signal.totalOpens.toLocaleString('en-US')}</p>
           </div>
         </div>
       </button>
