@@ -172,7 +172,7 @@ function App() {
       {current === 'users' && <Users currentUserId={auth.userId} onAccessChanged={auth.retry} />}
       {current === 'agent' && <AgentPortal userId={auth.userId} onBrandChanged={myBrand.reload} />}
       {current === 'partner' && <AgentApply userId={auth.userId} onRoleChanged={auth.retry} />}
-      {current === 'membership' && <Membership onJoin={() => navigate('signals')} />}
+      {current === 'membership' && <Membership useAgentPage={auth.role === 'agent' || auth.role === 'client'} onJoin={() => navigate('signals')} />}
     </Layout>
   );
 }

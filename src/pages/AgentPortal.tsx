@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Check, ClipboardList, Copy, ExternalLink, History as HistoryIcon, Loader2, Palette, UserCheck, Users } from 'lucide-react';
+import { AlertTriangle, Check, ClipboardList, Copy, ExternalLink, Gem, History as HistoryIcon, Loader2, Palette, UserCheck, Users } from 'lucide-react';
 import { BrandMark } from '@/components/agents/BrandMark';
 import { BrandingEditor } from '@/components/agents/BrandingEditor';
 import { AgentClientsList } from '@/components/agents/AgentClientsList';
 import { AgentCopyRequests } from '@/components/agents/AgentCopyRequests';
+import { MembershipEditor } from '@/components/agents/MembershipEditor';
 import { ActivityLogPanel } from '@/components/users/ActivityLogPanel';
 import { brandLink, fetchAgentClients, fetchOwnAgent, setClientApproval, type Agent, type AgentClient } from '@/lib/agents';
 import type { Member } from '@/lib/members';
 import { Hint } from '@/components/IconButton';
 import { useNotice } from '@/hooks/useConfirm';
 
-type Tab = 'clients' | 'requests' | 'branding' | 'activity';
+type Tab = 'clients' | 'requests' | 'branding' | 'membership' | 'activity';
 
 export function AgentPortal({ userId, onBrandChanged }: { userId: string; onBrandChanged: () => void }) {
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -72,6 +73,7 @@ export function AgentPortal({ userId, onBrandChanged }: { userId: string; onBran
     { key: 'clients', label: `Clients 客戶 (${clients.length})`, icon: Users },
     ...(canManage ? [{ key: 'requests' as Tab, label: `Copy applications 跟單申請${openRequests ? ` (${openRequests})` : ''}`, icon: ClipboardList }] : []),
     { key: 'branding', label: 'Branding & logo 品牌及 LOGO', icon: Palette },
+    { key: 'membership', label: 'Membership pricing 會員收費', icon: Gem },
     ...(agent.perm_view_activity ? [{ key: 'activity' as Tab, label: 'Client activity 客戶操作記錄', icon: HistoryIcon }] : []),
   ];
 
@@ -176,6 +178,7 @@ export function AgentPortal({ userId, onBrandChanged }: { userId: string; onBran
           }}
         />
       )}
+      {tab === 'membership' && <MembershipEditor />}
       {tab === 'activity' && agent.perm_view_activity && <ActivityLogPanel members={clientMembers} actorId={activityUser} onActorChange={setActivityUser} />}
     </div>
   );
