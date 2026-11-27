@@ -1,11 +1,10 @@
 import { useRef, useState } from 'react';
-import { Check, ImagePlus, Loader2, Save, Trash2 } from 'lucide-react';
+import { Check, ImagePlus, Loader2, Save, Shuffle, Trash2 } from 'lucide-react';
 import { BrandMark } from '@/components/agents/BrandMark';
-import { LOGO_TYPES, removeLogo, saveBranding, uploadLogo, type Agent } from '@/lib/agents';
+import { LOGO_TYPES, removeLogo, saveBranding, suggestBrandColor, uploadLogo, type Agent } from '@/lib/agents';
 import { IconButton } from '@/components/IconButton';
 import { useConfirm } from '@/hooks/useConfirm';
 
-const SWATCHES = ['#06b6d4', '#14b8a6', '#10b981', '#f59e0b', '#ef4444', '#f97316', '#3b82f6', '#eab308', '#e11d48', '#94a3b8'];
 const INPUT = 'w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20';
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -17,7 +16,7 @@ export function BrandingEditor({ agent, onSaved }: { agent: Agent; onSaved: () =
     contact: agent.contact ?? '',
     brand_color: agent.brand_color,
   });
-  const [busy, setBusy] = useState<'' | 'save' | 'logo'>('');
+  const [busy, setBusy] = useState<'' | 'save' | 'logo' | 'color'>('');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -38,6 +37,15 @@ export function BrandingEditor({ agent, onSaved }: { agent: Agent; onSaved: () =
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     onSaved();
+  };
+
+  const randomColor = async () => {
+    setBusy('color');
+    setError('');
+    const { color, error: err } = await suggestBrandColor();
+    setBusy('');
+    if (err) return setError(err);
+    if (color) setForm((f) => ({ ...f, brand_color: color }));
   };
 
   const pickLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,20 +110,21 @@ export function BrandingEditor({ agent, onSaved }: { agent: Agent; onSaved: () =
 
         <div>
           <span className="mb-2 block text-xs font-medium text-slate-400">Brand colour 品牌顏色</span>
+          <p className="mb-3 text-xs leading-relaxed text-slate-500">
+            Every agent page has its own unique colour, different from other agents and from the main site's cyan. 每位代理商的網頁主色均獨一無二，不會與其他代理商或主網青色相同。
+          </p>
           <div className="flex flex-wrap items-center gap-2">
-            {SWATCHES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setForm({ ...form, brand_color: c })}
-                aria-label={c}
-                className={`flex h-8 w-8 items-center justify-center rounded-full ring-offset-2 ring-offset-slate-800 transition-transform hover:scale-110 ${form.brand_color.toLowerCase() === c ? 'ring-2 ring-white' : ''}`}
-                style={{ backgroundColor: c }}
-              >
-                {form.brand_color.toLowerCase() === c && <Check className="h-4 w-4 text-black" />}
-              </button>
-            ))}
-            <input type="color" value={validColor ? form.brand_color : '#06b6d4'} onChange={(e) => setForm({ ...form, brand_color: e.target.value })} className="h-8 w-10 cursor-pointer rounded border border-slate-700 bg-transparent" aria-label="Custom colour" />
+            <span className="h-8 w-8 rounded-full ring-2 ring-white/20" style={{ backgroundColor: preview.brand_color }} />
+            <button
+              type="button"
+              onClick={randomColor}
+              disabled={!!busy}
+              className="flex h-8 items-center gap-2 rounded-lg border border-slate-700 px-3 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+            >
+              {busy === 'color' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Shuffle className="h-3.5 w-3.5" />}
+              Random 隨機配色
+            </button>
+            <input type="color" value={validColor ? form.brand_color : agent.brand_color} onChange={(e) => setForm({ ...form, brand_color: e.target.value })} className="h-8 w-10 cursor-pointer rounded border border-slate-700 bg-transparent" aria-label="Custom colour" />
             <input value={form.brand_color} onChange={(e) => setForm({ ...form, brand_color: e.target.value.trim() })} maxLength={7} className={`w-28 ${INPUT} ${validColor ? '' : 'border-red-500/60'}`} />
           </div>
         </div>

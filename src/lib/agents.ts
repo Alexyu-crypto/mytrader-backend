@@ -71,6 +71,10 @@ export const LOGO_TYPES: Record<string, string> = { 'image/png': 'png', 'image/j
 const FALLBACK = 'Something went wrong. Please try again. 操作失敗，請再試。';
 const MESSAGES: Record<string, string> = {
   slug_taken: 'That link name is already taken. 此連結名稱已被使用。',
+  color_taken: 'This colour is too close to another agent\'s page. Please pick another or press Random. 此顏色與其他代理商太接近，請另選或按「隨機配色」。',
+  color_main: 'Cyan / teal / sky blue is reserved for the main site. Please pick another colour. 青色系為主網專用，請另選顏色。',
+  color_dull: 'Please pick a brighter, more vivid colour (not grey, too dark or too pale). 請選較鮮明的顏色（不可灰色、過深或過淺）。',
+  no_free_color: 'Could not find a free colour. Please pick one manually. 未能找到可用顏色，請手動選擇。',
   not_pending: 'This application was already handled. 此申請已處理。',
   is_admin: 'Full admins cannot become agents. 全權管理員不能成為代理商。',
   already_agent: 'You are already an agent. 您已是代理商。',
@@ -224,6 +228,13 @@ export async function saveBranding(agentId: string, fields: { brand_name: string
     .update({ ...fields, tagline: fields.tagline || null, contact: fields.contact || null })
     .eq('id', agentId);
   return error ? friendly(error) : null;
+}
+
+export async function suggestBrandColor(): Promise<{ color: string | null; error: string | null }> {
+  const { data, error } = await supabase.rpc('suggest_agent_brand_color');
+  if (error) return { color: null, error: friendly(error) };
+  if (typeof data !== 'string') return { color: null, error: FALLBACK };
+  return { color: data, error: null };
 }
 
 export async function uploadLogo(agent: Agent, file: File): Promise<{ path: string | null; error: string | null }> {
