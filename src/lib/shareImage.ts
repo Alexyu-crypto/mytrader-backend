@@ -5,6 +5,17 @@ export interface SignalImageData {
   stats: [string, string][];
   curve: number[];
   footer: string;
+  brand?: { name: string; color: string; logoSrc: string | null };
+}
+
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
 }
 
 const W = 1200;
@@ -15,12 +26,15 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.roundRect(x, y, w, h, r);
 }
 
-export function renderSignalImage(data: SignalImageData): Promise<Blob> {
+export async function renderSignalImage(data: SignalImageData): Promise<Blob> {
+  const logo = data.brand?.logoSrc ? await loadImage(data.brand.logoSrc) : null;
+  const brandColor = data.brand?.color ?? '#22d3ee';
+  const brandName = data.brand?.name ?? 'MyTrader Tools';
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
-  if (!ctx) return Promise.reject(new Error('Canvas not supported'));
+  if (!ctx) throw new Error('Canvas not supported');
   const font = (weight: number, size: number) => `${weight} ${size}px Inter, "Segoe UI", "Noto Sans TC", system-ui, sans-serif`;
   const up = data.growthPct >= 0;
   const accent = up ? '#34d399' : '#f87171';
@@ -38,18 +52,29 @@ export function renderSignalImage(data: SignalImageData): Promise<Blob> {
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = '#22d3ee';
-  roundRect(ctx, 64, 56, 40, 40, 10);
-  ctx.fill();
-  ctx.fillStyle = '#020617';
-  ctx.font = font(700, 22);
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
-  ctx.fillText('M', 84, 77);
+  if (logo) {
+    const scale = Math.min(48 / logo.width, 48 / logo.height);
+    const w = logo.width * scale;
+    const h = logo.height * scale;
+    ctx.save();
+    roundRect(ctx, 60, 52, 48, 48, 10);
+    ctx.clip();
+    ctx.drawImage(logo, 60 + (48 - w) / 2, 52 + (48 - h) / 2, w, h);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = brandColor;
+    roundRect(ctx, 64, 56, 40, 40, 10);
+    ctx.fill();
+    ctx.fillStyle = '#020617';
+    ctx.font = font(700, 22);
+    ctx.textAlign = 'center';
+    ctx.fillText(brandName.trim().charAt(0).toUpperCase() || 'M', 84, 77);
+  }
   ctx.textAlign = 'left';
   ctx.fillStyle = '#ffffff';
   ctx.font = font(600, 24);
-  ctx.fillText('MyTrader Tools', 118, 70);
+  ctx.fillText(brandName, 118, 70);
   ctx.fillStyle = '#94a3b8';
   ctx.font = font(400, 16);
   ctx.fillText('Trading Signals 交易信號', 118, 94);
@@ -115,7 +140,7 @@ export function renderSignalImage(data: SignalImageData): Promise<Blob> {
   ctx.font = font(400, 16);
   ctx.fillText(data.footer, 64, 590);
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#22d3ee';
+  ctx.fillStyle = brandColor;
   ctx.font = font(600, 18);
   ctx.fillText('Copy this signal 立即跟單 →', W - 64, 590);
 

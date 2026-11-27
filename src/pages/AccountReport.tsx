@@ -67,8 +67,15 @@ function PrivateReport({ signedIn, brand }: { signedIn: boolean; brand: PublicBr
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6">
       <div className="text-center max-w-sm animate-fade-up">
+        {brand ? (
+          <div className="mb-8 flex flex-col items-center gap-3">
+            <BrandMark brand={brand} className="h-16 w-16 text-2xl" />
+            <p className="text-white text-lg font-semibold">{brand.brand_name}</p>
+            {brand.tagline && <p className="text-slate-400 text-sm -mt-2">{brand.tagline}</p>}
+          </div>
+        ) : null}
         <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto">
-          <Lock className="w-6 h-6 text-cyan-400" />
+          <Lock className="w-6 h-6" style={{ color: brand?.brand_color ?? '#22d3ee' }} />
         </div>
         <h1 className="text-white text-xl font-semibold mt-5">Members-only report</h1>
         <p className="text-slate-300 text-sm mt-1">此報告只限登入成員查看</p>
@@ -78,12 +85,23 @@ function PrivateReport({ signedIn, brand }: { signedIn: boolean; brand: PublicBr
             : 'The owner has made this report private. Sign in with an approved account to view it. 請用已批准帳戶登入。'}
         </p>
         {!signedIn && (
-          <button
-            onClick={() => setAuthMode('signin')}
-            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-colors"
-          >
-            Sign in · 登入
-          </button>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={() => setAuthMode('signin')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-slate-950 transition-opacity hover:opacity-90"
+              style={{ backgroundColor: brand?.brand_color ?? '#06b6d4' }}
+            >
+              Sign in · 登入
+            </button>
+            {brand?.signup_open && (
+              <button
+                onClick={() => setAuthMode('signup')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium border border-slate-600 text-white hover:border-slate-400 transition-colors"
+              >
+                Join {brand.brand_name} · 加入
+              </button>
+            )}
+          </div>
         )}
       </div>
       {authMode && <AuthModal mode={authMode} onModeChange={setAuthMode} onClose={() => setAuthMode(null)} brand={brand ?? undefined} />}
@@ -163,9 +181,15 @@ export function AccountReport({ accountName, brandSlug, viewerAccess }: { accoun
 
   if (accountsLoading || viewerAccess === 'checking' || (loading && !loadError)) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6">
+        {brand && (
+          <div className="flex items-center gap-3">
+            <BrandMark brand={brand} className="h-10 w-10 text-base" />
+            <span className="text-white font-semibold">{brand.brand_name}</span>
+          </div>
+        )}
         <div className="flex items-center gap-3 text-slate-400">
-          <span className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          <span className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: brand?.brand_color ?? '#22d3ee', borderTopColor: 'transparent' }} />
           Preparing report...
         </div>
       </div>
@@ -184,6 +208,12 @@ export function AccountReport({ accountName, brandSlug, viewerAccess }: { accoun
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
+          {brand && (
+            <div className="mb-6 flex items-center justify-center gap-3">
+              <BrandMark brand={brand} className="h-10 w-10 text-base" />
+              <span className="text-white font-semibold">{brand.brand_name}</span>
+            </div>
+          )}
           <FileText className="w-10 h-10 text-slate-600 mx-auto" />
           <h1 className="text-white text-xl font-semibold mt-4">Account not found</h1>
           <p className="text-slate-400 text-sm mt-2">There is no account called “{accountName}”. It may have been renamed or removed.</p>

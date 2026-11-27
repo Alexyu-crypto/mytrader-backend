@@ -1,6 +1,7 @@
 import type { ShareProps } from '@/components/share/ShareMenu';
 import { reportUrl } from '@/lib/accountData';
 import { renderSignalImage } from '@/lib/shareImage';
+import { fetchPublicBrand, logoUrl } from '@/lib/agents';
 import { pct, weeksRunning, type Signal } from '@/components/signals/SignalCard';
 
 export function signalShare(signal: Signal, agentSlug?: string | null): ShareProps {
@@ -21,8 +22,10 @@ export function signalShare(signal: Signal, agentSlug?: string | null): SharePro
       : 'This report is members-only, so visitors will be asked to sign up for free first. 此報告只限成員，訪客需先免費註冊。',
     image: {
       filename: `${account.account_name}-signal.png`,
-      render: () =>
-        renderSignalImage({
+      render: async () => {
+        const brand = agentSlug ? (await fetchPublicBrand(agentSlug)).brand : null;
+        return renderSignalImage({
+          brand: brand ? { name: brand.brand_name, color: brand.brand_color, logoSrc: logoUrl(brand.logo_path) } : undefined,
           name: account.account_name,
           subtitle: `${account.broker} · ${account.platform}`,
           growthPct: perf.growthPct,
@@ -34,7 +37,8 @@ export function signalShare(signal: Signal, agentSlug?: string | null): SharePro
             ['Trades 交易', perf.totalTrades.toLocaleString('en-US')],
           ],
           footer: 'Past performance is not indicative of future results. 過往表現不代表將來回報。',
-        }),
+        });
+      },
     },
   };
 }
