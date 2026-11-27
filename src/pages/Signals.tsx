@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Download, Radio, RefreshCw, Search } from 'lucide-react';
 import { useAccounts, useLivePositions } from '@/hooks/useRealtime';
 import { fetchBalanceOperations, fetchTradeHistory } from '@/lib/accountData';
+import { supabase } from '@/lib/supabase';
 import { computePerformance, countOpens } from '@/lib/performance';
 import { isOnline } from '@/lib/format';
 import type { BalanceOperation, TradeHistory } from '@/lib/types';
@@ -51,6 +52,34 @@ export function Signals({ userId, email, showEas, isAdmin }: { userId: string; e
     return map;
   }, [myRequests]);
 
+  const [followerFunds, setFollowerFunds] = useState<Record<string, { equity: number; count: number }>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data, error: rpcError } = await supabase.rpc('signal_total_funds');
+      if (cancelled) return;
+      if (rpcError || !Array.isArray(data)) {
+        console.error('signal total funds load failed', rpcError);
+        return;
+      }
+      setFollowerFunds(
+        Object.fromEntries(
+          (data as { master_account: string; follower_equity: number | null; follower_count: number | null }[]).map((r) => [
+            r.master_account,
+            { equity: Number(r.follower_equity) || 0, count: Number(r.follower_count) || 0 },
+          ]),
+        ),
+      );
+    };
+    load();
+    const timer = window.setInterval(load, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [attempt]);
+
   const masters = useMemo(() => accounts.filter((a) => a.type === 'master'), [accounts]);
   const masterKey = masters.map((m) => m.account_name).join('|');
 
@@ -84,9 +113,10 @@ export function Signals({ userId, email, showEas, isAdmin }: { userId: string; e
         perf: computePerformance(account, h.trades, h.ops, own),
         openCount: own.length,
         ...countOpens(h.trades, own),
+        followerFunds: followerFunds[name],
       };
     });
-  }, [masters, positions, history, introEdits]);
+  }, [masters, positions, history, introEdits, followerFunds]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();

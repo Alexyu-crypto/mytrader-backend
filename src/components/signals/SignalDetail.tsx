@@ -4,7 +4,7 @@ import { buildSignalAnalysis, signalVerdict, type Verdict } from '@/lib/signalAn
 import { BarChart, ProfitChart } from '@/components/report/ReportCharts';
 import { formatCurrency, isOnline, timeAgo } from '@/lib/format';
 import { formatDuration } from '@/lib/performance';
-import { CopyAction, initials, pct, profitFactorText, StyleTag, weeksRunning, type Signal } from '@/components/signals/SignalCard';
+import { CopyAction, initials, pct, profitFactorText, StyleTag, totalFunds, weeksRunning, type Signal } from '@/components/signals/SignalCard';
 import type { CopyRequest } from '@/lib/copyRequests';
 import { ShareButton } from '@/components/share/ShareMenu';
 import { signalShare } from '@/components/signals/signalShare';
@@ -42,6 +42,12 @@ export function SignalDetail({ signal, request, onCopy, onClose }: { signal: Sig
     ['Balance 結餘', formatCurrency(account.balance || 0)],
     ['Equity 淨值', formatCurrency(account.equity || 0)],
     ['Open trades 持倉中', String(openCount)],
+    ...(signal.followerFunds
+      ? ([
+          ['Total funds 主賬戶+追隨者總資金 (USD)', formatCurrency(totalFunds(signal))],
+          ['Followers 追隨者', String(signal.followerFunds.count)],
+        ] as [string, string][])
+      : []),
   ];
 
   return (

@@ -1,4 +1,4 @@
-import { ArrowUpRight, CalendarDays, Copy, Layers, PencilLine, Scale, Zap } from 'lucide-react';
+import { ArrowUpRight, CalendarDays, Copy, Layers, PencilLine, Scale, Users, Wallet, Zap } from 'lucide-react';
 import type { Account } from '@/lib/types';
 import type { CurvePoint, Performance } from '@/lib/performance';
 import { formatCurrency, isOnline } from '@/lib/format';
@@ -13,7 +13,10 @@ export interface Signal {
   openCount: number;
   todayOpens: number;
   totalOpens: number;
+  followerFunds?: { equity: number; count: number };
 }
+
+export const totalFunds = (signal: Signal) => (signal.account.equity || 0) + (signal.followerFunds?.equity ?? 0);
 
 const WEEK_MS = 7 * 24 * 3600 * 1000;
 
@@ -140,6 +143,22 @@ export function SignalCard({ signal, rank, request, onOpen, onCopy, onEditIntro 
         <div className="-mx-1 mt-2">
           <Sparkline curve={perf.curve} up={up} />
         </div>
+
+        {signal.followerFunds && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1 text-[11px] text-slate-400">
+                <Wallet className="h-3 w-3 text-cyan-400" />
+                Total funds 主賬戶+追隨者總資金 (USD)
+              </p>
+              <p className="mt-0.5 text-base font-bold tabular-nums text-cyan-200">{formatCurrency(totalFunds(signal))}</p>
+            </div>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-slate-900/70 px-2 py-1 text-[11px] font-medium tabular-nums text-slate-300" title="Followers 追隨者">
+              <Users className="h-3 w-3" />
+              {signal.followerFunds.count}
+            </span>
+          </div>
+        )}
 
         <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-3 border-t border-slate-700/60 pt-3 text-xs">
           <div>
