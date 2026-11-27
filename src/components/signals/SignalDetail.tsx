@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, FileText, LineChart, X } from 'lucide-react';
+import { BarChart3, Code2, FileText, LineChart, X } from 'lucide-react';
 import { buildSignalAnalysis, signalVerdict, type Verdict } from '@/lib/signalAnalysis';
 import { BarChart, ProfitChart } from '@/components/report/ReportCharts';
 import { formatCurrency, isOnline, timeAgo } from '@/lib/format';
@@ -9,6 +9,7 @@ import type { CopyRequest } from '@/lib/copyRequests';
 import { ShareButton } from '@/components/share/ShareMenu';
 import { signalShare } from '@/components/signals/signalShare';
 import { useShareSlug } from '@/hooks/useShareSlug';
+import { SignalWidgetDialog } from '@/components/signals/SignalWidgetDialog';
 
 const signed = (n: number) => `${n > 0 ? '+' : ''}${formatCurrency(n)}`;
 const VERDICT_STYLE: Record<Verdict, [string, string]> = {
@@ -24,14 +25,15 @@ export function SignalDetail({ signal, request, onCopy, onClose }: { signal: Sig
   const shareSlug = useShareSlug();
   const online = isOnline(account.last_seen);
   const [lang, setLang] = useState<'en' | 'zh'>('zh');
+  const [widgetOpen, setWidgetOpen] = useState(false);
   const analysis = useMemo(() => buildSignalAnalysis(perf, weeksRunning(perf, account), openCount), [perf, account, openCount]);
   const [verdictLabel, verdictClass] = VERDICT_STYLE[signalVerdict(perf)];
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !widgetOpen && onClose();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, widgetOpen]);
 
   const stats: [string, string][] = [
     ['Weeks running 運行週數', String(weeksRunning(perf, account))],
@@ -71,6 +73,14 @@ export function SignalDetail({ signal, request, onCopy, onClose }: { signal: Sig
               · {account.broker} · {account.platform}
             </p>
           </div>
+          <button
+            onClick={() => setWidgetOpen(true)}
+            aria-label="Website widget 網站小工具"
+            title="Website widget 網站小工具"
+            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-cyan-300"
+          >
+            <Code2 className="h-5 w-5" />
+          </button>
           <ShareButton variant="icon" label="Share signal · 分享信號" {...signalShare(signal, shareSlug)} />
           <button onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white">
             <X className="h-5 w-5" />
@@ -169,6 +179,7 @@ export function SignalDetail({ signal, request, onCopy, onClose }: { signal: Sig
           <CopyAction request={request} onCopy={onCopy} size="lg" />
         </footer>
       </aside>
+      {widgetOpen && <SignalWidgetDialog accountName={account.account_name} onClose={() => setWidgetOpen(false)} />}
     </div>
   );
 }
