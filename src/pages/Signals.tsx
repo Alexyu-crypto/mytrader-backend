@@ -16,6 +16,7 @@ import { siteShare } from '@/lib/share';
 import { useShareSlug } from '@/hooks/useShareSlug';
 import { EaDownloads } from '@/components/signals/EaDownloads';
 import { SignalIntroDialog } from '@/components/signals/SignalIntroDialog';
+import { SignalMethodology } from '@/components/signals/SignalMethodology';
 
 type SortKey = 'profit' | 'drawdown' | 'weeks' | 'equity';
 
@@ -224,6 +225,7 @@ export function Signals({ userId, email, showEas, isAdmin }: { userId: string; e
           ))}
         </div>
       )}
+      <SignalMethodology />
       </>
       )}
 
