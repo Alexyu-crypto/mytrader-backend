@@ -8,7 +8,7 @@ import './index.css';
 
 startServerClockSync();
 
-const cleanPath = window.location.pathname.match(/^\/((?:a\/[a-z0-9-]{3,30})(?:\/report\/.+)?|report\/.+)\/?$/i);
+const cleanPath = window.location.pathname.match(/^\/((?:a\/[a-z0-9-]{3,30})(?:\/(?:report|plan)\/.+)?|(?:report|plan)\/.+)\/?$/i);
 if (cleanPath) {
   window.history.replaceState(null, '', `/${window.location.search}#/${cleanPath[1]}`);
 }

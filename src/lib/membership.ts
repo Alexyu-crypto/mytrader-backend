@@ -73,6 +73,20 @@ export async function fetchAgentMembershipPage(): Promise<{ page: MembershipPage
   return { page: { ...(data as Omit<MembershipPage, 'plans'>), plans }, error: null };
 }
 
+export async function fetchPublicMembershipPage(slug: string | null): Promise<{ page: MembershipPage; error: string | null }> {
+  if (!slug) return { page: DEFAULT_PAGE, error: null };
+  const { data, error } = await supabase.rpc('agent_public_membership', { p_slug: slug });
+  if (error || !Array.isArray(data)) return { page: DEFAULT_PAGE, error: 'Could not load the membership plans. 未能載入會員計劃。' };
+  const row = data[0] as Omit<MembershipPage, 'enabled'> | undefined;
+  const plans = row && Array.isArray(row.plans) ? row.plans.filter(isPlan) : [];
+  if (!row || plans.length === 0) return { page: DEFAULT_PAGE, error: null };
+  return { page: { ...row, enabled: true, plans }, error: null };
+}
+
+export function planUrl(index: number, agentSlug: string | null): string {
+  return `${window.location.origin}${agentSlug ? `/a/${agentSlug}` : ''}/plan/${index + 1}`;
+}
+
 export async function saveAgentMembershipPage(page: MembershipPage): Promise<string | null> {
   const { error } = await supabase.rpc('save_agent_membership_page', {
     p_enabled: page.enabled,

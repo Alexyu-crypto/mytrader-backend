@@ -11,6 +11,7 @@ import { MetaApiMonitorPage } from '@/pages/MetaApiMonitor';
 import { EaHealth } from '@/pages/EaHealth';
 import { UserManual } from '@/pages/UserManual';
 import { AccountReport } from '@/pages/AccountReport';
+import { PlanSharePage } from '@/pages/PlanShare';
 import { Landing } from '@/pages/Landing';
 import { Strategies } from '@/pages/Strategies';
 import { Users } from '@/pages/Users';
@@ -54,8 +55,13 @@ function getReportAccount(): string | null {
 
 const SLUG_ALIASES: Record<string, string> = { followreade: 'royalmaster' };
 
+function getPlanNumber(): number | null {
+  const match = window.location.hash.match(/^#\/(?:a\/[a-z0-9-]{3,30}\/)?plan\/(\d{1,2})\/?(?:\?.*)?$/i);
+  return match ? Number(match[1]) : null;
+}
+
 function getAgentSlug(): string | null {
-  const match = window.location.hash.match(/^#\/a\/([a-z0-9-]{3,30})(?:\/?$|\/report\/)/i);
+  const match = window.location.hash.match(/^#\/a\/([a-z0-9-]{3,30})(?:\/?$|\/(?:report|plan)\/)/i);
   if (!match) return null;
   const slug = match[1].toLowerCase();
   return SLUG_ALIASES[slug] ?? slug;
@@ -71,6 +77,7 @@ function getHashPage(): PageKey {
 function App() {
   const [page, setPage] = useState<PageKey>(getHashPage);
   const [reportAccount, setReportAccount] = useState<string | null>(getReportAccount);
+  const [planNumber, setPlanNumber] = useState<number | null>(getPlanNumber);
   const [agentSlug, setAgentSlug] = useState<string | null>(getAgentSlug);
   const [strategiesPage, setStrategiesPage] = useState(isStrategiesHash);
   const [accountPrefill, setAccountPrefill] = useState<AccountPrefill | null>(null);
@@ -90,6 +97,7 @@ function App() {
     const onHashChange = () => {
       setPage(getHashPage());
       setReportAccount(getReportAccount());
+      setPlanNumber(getPlanNumber());
       setAgentSlug(getAgentSlug());
       setStrategiesPage((was) => {
         const now = isStrategiesHash();
@@ -124,6 +132,7 @@ function App() {
     return <ResetPassword ready={auth.status !== 'loading'} hasSession={auth.status !== 'signed_out' && auth.status !== 'loading'} linkError={auth.recoveryError} onDone={auth.finishRecovery} />;
   }
   if (reportAccount) return withShareSlug(<AccountReport key={`${agentSlug}|${reportAccount}`} accountName={reportAccount} brandSlug={agentSlug} viewerAccess={auth.status === 'active' ? 'member' : auth.status === 'loading' || auth.status === 'checking' ? 'checking' : auth.status === 'no_access' ? 'pending' : 'guest'} />);
+  if (planNumber) return <PlanSharePage key={`${agentSlug}|${planNumber}`} slug={agentSlug} planNumber={planNumber} signedIn={auth.status === 'active'} />;
   if (auth.status === 'signed_out') {
     if (agentSlug) return <AgentLanding key={agentSlug} slug={agentSlug} />;
     return strategiesPage ? <Strategies /> : <Landing />;

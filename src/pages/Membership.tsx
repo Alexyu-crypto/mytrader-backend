@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, Check, Crown, Gem, Loader2, Rocket, ShieldCheck, Sparkles, Star, Zap } from 'lucide-react';
-import { DEFAULT_PAGE, fetchAgentMembershipPage, type MembershipPage } from '@/lib/membership';
+import { DEFAULT_PAGE, fetchAgentMembershipPage, planUrl, type MembershipPage, type Plan } from '@/lib/membership';
+import { ShareButton, type ShareProps } from '@/components/share/ShareMenu';
+import { useShareSlug } from '@/hooks/useShareSlug';
 
 const ICONS = [Crown, Rocket, Gem, Star, Zap, ShieldCheck];
 
@@ -25,7 +27,76 @@ function gridCols(n: number) {
   return 'md:grid-cols-2 lg:grid-cols-3';
 }
 
-export function MembershipView({ page, onJoin }: { page: MembershipPage; onJoin?: () => void }) {
+function planShare(plan: Plan, index: number, slug: string | null, brandName?: string): ShareProps {
+  const title = [plan.zh, plan.name].filter(Boolean).join(' · ');
+  const lines = [
+    `${brandName ? `${brandName} · ` : ''}${title} — ${plan.price}${plan.period ? ` ${plan.period}` : ''}`,
+    plan.audience,
+    ...plan.features.map((f) => `✔ ${f}`),
+  ].filter(Boolean);
+  return {
+    heading: `Share plan 分享計劃 · ${title}`,
+    content: { url: planUrl(index, slug), campaign: `plan_${index + 1}`, title, text: lines.join('\n') },
+  };
+}
+
+export function PlanCard({ plan, index, onJoin, joinLabel = 'Join now 請現在加入', share }: { plan: Plan; index: number; onJoin?: () => void; joinLabel?: string; share?: ShareProps }) {
+  const s = plan.highlight ? STYLE.highlight : STYLE.normal;
+  const Icon = ICONS[index % ICONS.length];
+  return (
+    <article
+      translate="no"
+      style={{ animationDelay: `${index * 80}ms` }}
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-800/40 p-6 transition-all duration-300 hover:-translate-y-1 sm:p-8 animate-fade-up ${s.ring}`}
+    >
+      <div className={`pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b ${s.glow} to-transparent`} />
+      <div className="absolute right-5 top-5 flex items-center gap-2">
+        {plan.highlight && <span className="rounded-full bg-emerald-400 px-2.5 py-1 text-[11px] font-semibold text-slate-950">Most popular 最受歡迎</span>}
+        {share && <ShareButton variant="icon" label="Share this plan · 分享此計劃" {...share} />}
+      </div>
+      <div className="relative">
+        <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${s.chip}`}>
+          <Icon className="h-5 w-5" />
+        </span>
+        <h2 className="mt-5 text-xl font-bold text-white">
+          {plan.zh ? (
+            <>
+              {plan.zh} <span className="font-medium text-slate-400">· {plan.name}</span>
+            </>
+          ) : (
+            plan.name
+          )}
+        </h2>
+        {plan.audience && <p className="mt-1 text-sm leading-relaxed text-slate-400">{plan.audience}</p>}
+        <p className="mt-6 flex flex-wrap items-end gap-x-1.5">
+          <span className="text-5xl font-bold tracking-tight text-white">${plan.price}</span>
+          {plan.period && <span className="pb-1.5 text-sm text-slate-400">{plan.period}</span>}
+        </p>
+      </div>
+
+      <ul className="relative mt-6 flex-1 space-y-3 border-t border-slate-700/70 pt-6">
+        {plan.features.map((f, j) => (
+          <li key={`${f}-${j}`} className="flex items-start gap-3 text-sm text-slate-200">
+            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${s.chip}`}>
+              <Check className="h-3 w-3" />
+            </span>
+            {f}
+          </li>
+        ))}
+      </ul>
+
+      <button
+        onClick={onJoin}
+        disabled={!onJoin}
+        className={`relative mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-colors disabled:cursor-default ${s.button}`}
+      >
+        {joinLabel} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+      </button>
+    </article>
+  );
+}
+
+export function MembershipView({ page, onJoin, shareSlug }: { page: MembershipPage; onJoin?: () => void; shareSlug?: string | null }) {
   return (
     <div className="mx-auto max-w-5xl space-y-10">
       <header className="text-center animate-fade-up">
@@ -40,60 +111,9 @@ export function MembershipView({ page, onJoin }: { page: MembershipPage; onJoin?
         <p className="rounded-2xl border border-dashed border-slate-700 py-12 text-center text-sm text-slate-500">No plans yet 尚未有計劃</p>
       ) : (
         <div className={`grid gap-6 ${gridCols(page.plans.length)}`}>
-          {page.plans.map((plan, i) => {
-            const s = plan.highlight ? STYLE.highlight : STYLE.normal;
-            const Icon = ICONS[i % ICONS.length];
-            return (
-              <article
-                key={`${plan.name}-${i}`}
-                style={{ animationDelay: `${i * 80}ms` }}
-                className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-slate-800/40 p-6 transition-all duration-300 hover:-translate-y-1 sm:p-8 animate-fade-up ${s.ring}`}
-              >
-                <div className={`pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b ${s.glow} to-transparent`} />
-                {plan.highlight && (
-                  <span className="absolute right-5 top-5 rounded-full bg-emerald-400 px-2.5 py-1 text-[11px] font-semibold text-slate-950">Most popular 最受歡迎</span>
-                )}
-                <div className="relative">
-                  <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${s.chip}`}>
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <h2 className="mt-5 text-xl font-bold text-white">
-                    {plan.zh ? (
-                      <>
-                        {plan.zh} <span className="font-medium text-slate-400">· {plan.name}</span>
-                      </>
-                    ) : (
-                      plan.name
-                    )}
-                  </h2>
-                  {plan.audience && <p className="mt-1 text-sm leading-relaxed text-slate-400">{plan.audience}</p>}
-                  <p className="mt-6 flex flex-wrap items-end gap-x-1.5">
-                    <span className="text-5xl font-bold tracking-tight text-white">${plan.price}</span>
-                    {plan.period && <span className="pb-1.5 text-sm text-slate-400">{plan.period}</span>}
-                  </p>
-                </div>
-
-                <ul className="relative mt-6 flex-1 space-y-3 border-t border-slate-700/70 pt-6">
-                  {plan.features.map((f, j) => (
-                    <li key={`${f}-${j}`} className="flex items-start gap-3 text-sm text-slate-200">
-                      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${s.chip}`}>
-                        <Check className="h-3 w-3" />
-                      </span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={onJoin}
-                  disabled={!onJoin}
-                  className={`relative mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-colors disabled:cursor-default ${s.button}`}
-                >
-                  Join now 請現在加入 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </button>
-              </article>
-            );
-          })}
+          {page.plans.map((plan, i) => (
+            <PlanCard key={`${plan.name}-${i}`} plan={plan} index={i} onJoin={onJoin} share={shareSlug === undefined ? undefined : planShare(plan, i, shareSlug)} />
+          ))}
         </div>
       )}
 
@@ -102,7 +122,7 @@ export function MembershipView({ page, onJoin }: { page: MembershipPage; onJoin?
           <ShieldCheck className="h-8 w-8 shrink-0 text-cyan-300" />
           <div className="text-sm leading-relaxed text-slate-400">
             <p className="font-medium text-white">How to join 如何加入</p>
-            <p className="whitespace-pre-line">{page.join_note}</p>
+            <p className="whitespace-pre-line" translate="no">{page.join_note}</p>
           </div>
         </section>
       )}
@@ -111,6 +131,7 @@ export function MembershipView({ page, onJoin }: { page: MembershipPage; onJoin?
 }
 
 export function Membership({ useAgentPage, onJoin }: { useAgentPage: boolean; onJoin: () => void }) {
+  const shareSlug = useShareSlug();
   const [page, setPage] = useState<MembershipPage | null>(useAgentPage ? null : DEFAULT_PAGE);
 
   useEffect(() => {
@@ -135,5 +156,5 @@ export function Membership({ useAgentPage, onJoin }: { useAgentPage: boolean; on
       </div>
     );
   }
-  return <MembershipView page={page} onJoin={onJoin} />;
+  return <MembershipView page={page} onJoin={onJoin} shareSlug={shareSlug} />;
 }
