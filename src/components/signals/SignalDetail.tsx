@@ -4,7 +4,7 @@ import { buildSignalAnalysis, signalVerdict, type Verdict } from '@/lib/signalAn
 import { BarChart, ProfitChart } from '@/components/report/ReportCharts';
 import { formatCurrency, isOnline, timeAgo } from '@/lib/format';
 import { formatDuration } from '@/lib/performance';
-import { CopyAction, initials, pct, weeksRunning, type Signal } from '@/components/signals/SignalCard';
+import { CopyAction, initials, pct, StyleTag, weeksRunning, type Signal } from '@/components/signals/SignalCard';
 import type { CopyRequest } from '@/lib/copyRequests';
 import { ShareButton } from '@/components/share/ShareMenu';
 import { signalShare } from '@/components/signals/signalShare';
@@ -54,7 +54,10 @@ export function SignalDetail({ signal, request, onCopy, onClose }: { signal: Sig
             {initials(account.account_name)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-lg font-semibold text-white">{account.account_name}</p>
+            <p className="flex min-w-0 items-center gap-2 text-lg font-semibold text-white">
+              <span className="truncate">{account.account_name}</span>
+              <StyleTag accountName={account.account_name} />
+            </p>
             <p className="flex items-center gap-2 text-xs text-slate-400">
               <span className={`inline-flex items-center gap-1 ${online ? 'text-emerald-400' : ''}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />

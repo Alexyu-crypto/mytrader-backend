@@ -15,6 +15,22 @@ export interface Signal {
 
 const WEEK_MS = 7 * 24 * 3600 * 1000;
 
+const STYLE_TAGS: Record<string, { label: string; tone: string }> = {
+  'M-CX-460000745-FXPRO': { label: 'Aggressive 進取', tone: 'border-orange-400/60 bg-orange-500/15 text-orange-300' },
+  'M-A-80020103-ICMarketsSC': { label: 'Conservative 保守', tone: 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300' },
+};
+
+export function StyleTag({ accountName }: { accountName: string }) {
+  const tag = STYLE_TAGS[accountName];
+  if (!tag) return null;
+  return (
+    <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-bold animate-tag-blink ${tag.tone}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {tag.label}
+    </span>
+  );
+}
+
 export const pct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
 
 export function weeksRunning(perf: Performance, account: Account): number {
@@ -90,6 +106,7 @@ export function SignalCard({ signal, rank, request, onOpen, onCopy }: { signal: 
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-white">{account.account_name}</p>
+            <div className="my-1 empty:hidden"><StyleTag accountName={account.account_name} /></div>
             <p className="truncate text-xs text-slate-400">
               {account.broker} · {account.platform}
             </p>
