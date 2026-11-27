@@ -26,12 +26,23 @@ export function SignalMethodology() {
         </a>
       </div>
       <div className="p-6">
-        <img
-          src={funnelImage}
-          alt="CATRADERX 7-layer signal funnel 七層漏斗圖"
-          loading="lazy"
-          className="mx-auto w-full max-w-4xl rounded-xl ring-1 ring-slate-700/80"
-        />
+        <a
+          href="https://catraderx.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Visit CATRADERX 前往 CATRADERX"
+          className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60 rounded-xl"
+        >
+          <img
+            src={funnelImage}
+            alt="CATRADERX 7-layer signal funnel 七層漏斗圖"
+            loading="lazy"
+            className="mx-auto w-full max-w-4xl rounded-xl ring-1 ring-slate-700/80 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:ring-amber-500/50 group-hover:shadow-xl group-hover:shadow-amber-500/10"
+          />
+          <p className="mt-3 text-center text-xs text-slate-500 transition-colors group-hover:text-amber-300">
+            Click the image to visit catraderx.com 點擊圖片前往 catraderx.com
+          </p>
+        </a>
       </div>
     </section>
   );
