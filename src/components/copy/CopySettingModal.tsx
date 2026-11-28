@@ -7,18 +7,22 @@ import type { SymbolRules } from '@/lib/symbolMap';
 import { IconButton } from '@/components/IconButton';
 import { useConfirm } from '@/hooks/useConfirm';
 
+export type CopySettingsPayload = Omit<CopySettings, 'id' | 'created_at'>;
+
 export function CopySettingModal({
   master,
   follower,
   existing,
   onClose,
   onSaved,
+  onPersist,
 }: {
   master: string;
   follower: string;
   existing: CopySettings | null;
   onClose: () => void;
   onSaved: () => void;
+  onPersist?: (payload: CopySettingsPayload) => Promise<boolean>;
 }) {
   const ask = useConfirm();
   const [enabled, setEnabled] = useState(existing?.enabled ?? true);
@@ -71,7 +75,7 @@ export function CopySettingModal({
   const handleSave = async () => {
     setSaving(true);
     setError('');
-    const payload = {
+    const payload: CopySettingsPayload = {
       master_account: master,
       follower_account: follower,
       enabled,
@@ -90,7 +94,10 @@ export function CopySettingModal({
       max_open_trades: maxOpenTrades,
     };
 
-    if (existing) {
+    if (onPersist) {
+      if (await onPersist(payload)) onSaved();
+      else setError('Could not save these settings. Please try again. 未能儲存設定，請再試。');
+    } else if (existing) {
       const { error: err } = await supabase.from('copy_settings').update(payload).eq('id', existing.id);
       if (err) { console.error('copy settings update failed', err); setError('Could not save these settings. Please try again. 未能儲存設定，請再試。'); }
       else onSaved();
@@ -321,7 +328,7 @@ export function CopySettingModal({
             >
               {saving ? 'Saving...' : 'Save Settings'}
             </button>
-            {existing && (
+            {existing && !onPersist && (
               <button
                 onClick={handleDelete}
                 className="px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-medium transition-colors"

@@ -19,6 +19,7 @@ import { Hint, IconButton } from '@/components/IconButton';
 import { InstallPackageDialog } from '@/components/copy/InstallPackageDialog';
 import { ConnectionBadge, connectionShort } from '@/components/ConnectionBadge';
 import { useConfirm } from '@/hooks/useConfirm';
+import { RelayTestGroup } from '@/components/relay/RelayTestGroup';
 
 interface Group {
   master: string;
@@ -86,6 +87,7 @@ export function CopyGroupsPage({ canEdit }: { canEdit: boolean }) {
   const followerNames = useMemo(() => accounts.filter((a) => a.type === 'follower').map((a) => a.account_name).sort(), [accounts]);
   const onlineAccounts = useMemo(() => new Set(accounts.filter((a) => isOnline(a)).map((a) => a.account_name)), [accounts]);
   const accountByName = useMemo(() => new Map(accounts.map((a) => [a.account_name, a])), [accounts]);
+  const liveLinked = useMemo(() => new Set(settings.flatMap((s) => [s.master_account, s.follower_account])), [settings]);
 
   const groups = useMemo(() => {
     const platform = new Map(accounts.map((a) => [a.account_name, a.platform]));
@@ -206,6 +208,8 @@ export function CopyGroupsPage({ canEdit }: { canEdit: boolean }) {
       </PinnedTop>
 
       {error && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">{error}</div>}
+
+      {!loading && <RelayTestGroup canEdit={canEdit} accounts={accounts} liveLinked={liveLinked} />}
 
       {loading ? (
         <div className="text-slate-400 text-center py-8">Loading groups...</div>

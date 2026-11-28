@@ -13,6 +13,7 @@ import type { LivePosition } from '@/lib/types';
 import { diffMs, fetchCopyLinks, serverDelayMs, tradeKey, type CopyLink } from '@/lib/copyDelay';
 import { useLinkedAccounts } from '@/hooks/useLinkedAccounts';
 import { ClientScopeChips, ClientScopeGate } from '@/components/client/ClientScope';
+import { DataSourceBadge } from '@/components/relay/DataSourceBadge';
 
 type TypeFilter = 'all' | 'master' | 'follower' | 'own' | 'signal';
 type SortKey = 'account_name' | 'ticket' | 'symbol' | 'order_type' | 'lots' | 'open_price' | 'sl' | 'tp' | 'profit' | 'open_time' | 'delay';
@@ -128,6 +129,7 @@ export function LivePositions({ canEdit, clientView = false }: { canEdit: boolea
         <p className="text-slate-400 text-sm mt-1">
           {clientView ? 'Open trades on your accounts and the signals you joined, updated in real time · 您的帳戶及已參加信號的即時持倉' : 'Open trades across all connected accounts, updated in real time'}
         </p>
+        {!clientView && <DataSourceBadge />}
       </div>
         <IconButton label="Export Excel · 匯出" tone="primary" size="md" onClick={handleExport} disabled={sorted.length === 0}>
           <FileSpreadsheet className="w-4 h-4" />

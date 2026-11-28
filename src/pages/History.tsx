@@ -17,6 +17,7 @@ import { logActivity } from '@/lib/activityLog';
 import { IconButton } from '@/components/IconButton';
 import { useLinkedAccounts } from '@/hooks/useLinkedAccounts';
 import { ClientScopeChips, ClientScopeGate } from '@/components/client/ClientScope';
+import { DataSourceBadge } from '@/components/relay/DataSourceBadge';
 
 const PAGE_SIZES = [50, 100] as const;
 
@@ -232,6 +233,7 @@ export function History({ clientView = false }: { clientView?: boolean }) {
           ? 'Closed trades, deposits and withdrawals on your accounts and the signals you joined · 您的帳戶及已參加信號的歷史'
           : 'Closed trades, deposits and withdrawals from all accounts'}
       </p>
+      {!clientView && <DataSourceBadge />}
     </div>
   );
 
