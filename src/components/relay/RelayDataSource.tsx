@@ -11,10 +11,10 @@ const STATUS_STYLE: Record<BackfillJob['status'], string> = {
   failed: 'border-red-500/40 text-red-300',
 };
 
-export function RelayDataSource({ canEdit, group, jobs, onChanged }: { canEdit: boolean; group: RelayGroup; jobs: BackfillJob[]; onChanged: () => void }) {
+export function RelayDataSource({ canEdit, group, live, jobs, onChanged }: { canEdit: boolean; group: RelayGroup; live: boolean; jobs: BackfillJob[]; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const source = dataSourceLabel(group.engine);
+  const source = dataSourceLabel(group.engine, live);
   const hasQueued = jobs.some((j) => j.status === 'queued' || j.status === 'running');
 
   const setDays = async (days: BackfillDays) => {

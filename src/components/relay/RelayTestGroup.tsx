@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronDown, FlaskConical, Info, Loader2, RadioTower } from 'lucide-react';
+import { ChevronDown, FlaskConical, Info, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Account } from '@/lib/types';
-import { ENGINE_OPTIONS, loadRelayGroup, RELAY_TEST_GROUP, type BackfillJob, type ContractSize, type RelayEngine, type RelayGroup, type RelayLogRow, type RelayMember } from '@/lib/relay';
+import { ENGINE_OPTIONS, gatewayLive, loadRelayGroup, RELAY_TEST_GROUP, type BackfillJob, type ContractSize, type RelayEngine, type RelayGroup, type RelayLogRow, type RelayMember } from '@/lib/relay';
+import { RelayGatewaySetup, RelayGatewayStatus } from '@/components/relay/RelayGateway';
 import { RelayMembers } from '@/components/relay/RelayMembers';
 import { RelayDataSource } from '@/components/relay/RelayDataSource';
 import { RelayLog } from '@/components/relay/RelayLog';
@@ -20,7 +21,6 @@ export function RelayTestGroup({ canEdit, accounts, liveLinked }: { canEdit: boo
   const [state, setState] = useState<'loading' | 'ready' | 'error' | 'none'>('loading');
   const [open, setOpen] = useState(true);
   const [engineError, setEngineError] = useState('');
-  const [notice, setNotice] = useState(false);
 
   const load = useCallback(async () => {
     const res = await loadRelayGroup(RELAY_TEST_GROUP);
@@ -33,6 +33,13 @@ export function RelayTestGroup({ canEdit, accounts, liveLinked }: { canEdit: boo
   useEffect(() => {
     load();
   }, [load]);
+
+  const polling = open && data?.group.engine === 'cloud_relay';
+  useEffect(() => {
+    if (!polling) return;
+    const id = window.setInterval(load, 3000);
+    return () => window.clearInterval(id);
+  }, [polling, load]);
 
   if (state === 'none') return null;
   if (state === 'loading') {
@@ -48,9 +55,9 @@ export function RelayTestGroup({ canEdit, accounts, liveLinked }: { canEdit: boo
 
   const { group } = data;
   const filled = data.members.filter((m) => m.account_name).length;
+  const live = group.engine === 'cloud_relay' && gatewayLive(group.gateway_seen_at);
 
   const setEngine = async (engine: RelayEngine) => {
-    setNotice(engine === 'cloud_relay');
     if (engine === group.engine) return;
     setEngineError('');
     const { error } = await supabase.from('relay_groups').update({ engine, updated_at: new Date().toISOString() }).eq('id', group.id);
@@ -96,10 +103,10 @@ export function RelayTestGroup({ canEdit, accounts, liveLinked }: { canEdit: boo
             </div>
             {engineError && <p className="mt-2 text-sm text-red-400">{engineError}</p>}
             {group.engine === 'cloud_relay' && (
-              <div className={`mt-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200 ${notice ? 'animate-fade-in' : ''}`}>
-                <RadioTower className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>Relay not connected, testing · Relay 未接入，測試中</span>
-              </div>
+              <>
+                <RelayGatewayStatus group={group} live={live} />
+                {canEdit && <RelayGatewaySetup group={group} members={data.members} onChanged={load} />}
+              </>
             )}
             {group.engine !== 'cloud_relay' && (
               <div className="mt-3 flex items-start gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2.5 text-sm text-slate-300">
@@ -110,7 +117,7 @@ export function RelayTestGroup({ canEdit, accounts, liveLinked }: { canEdit: boo
           </div>
 
           <RelayMembers canEdit={canEdit} members={data.members} sizes={data.sizes} accounts={accounts} liveLinked={liveLinked} onChanged={load} />
-          <RelayDataSource canEdit={canEdit} group={group} jobs={data.jobs} onChanged={load} />
+          <RelayDataSource canEdit={canEdit} group={group} live={live} jobs={data.jobs} onChanged={load} />
           <RelayLog rows={data.log} />
         </div>
       )}

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { CopySettings } from '@/lib/types';
+import { serverNow } from '@/lib/serverClock';
 
 export type RelayEngine = 'metaapi' | 'ea' | 'cloud_relay';
 export type BackfillDays = 30 | 90;
@@ -9,6 +10,14 @@ export interface RelayGroup {
   name: string;
   engine: RelayEngine;
   backfill_days: BackfillDays;
+  gateway_seen_at: string | null;
+  has_gateway_key: boolean;
+}
+
+const GATEWAY_FRESH_MS = 20_000;
+
+export function gatewayLive(seenAt: string | null): boolean {
+  return !!seenAt && serverNow() - new Date(seenAt).getTime() < GATEWAY_FRESH_MS;
 }
 
 export interface RelayMember {
@@ -62,6 +71,7 @@ export interface RelayLogRow {
   symbol: string;
   master_ticket: number | null;
   master_opened_at: string;
+  gateway_received_at: string | null;
   follower_received_at: string | null;
   delay_ms: number | null;
   status: 'pending' | 'copied' | 'missed' | 'failed';
@@ -76,10 +86,10 @@ export const ENGINE_OPTIONS: { key: RelayEngine; label: string }[] = [
   { key: 'cloud_relay', label: 'Cloud Relay' },
 ];
 
-export function dataSourceLabel(engine: RelayEngine): { label: string; ready: boolean } {
+export function dataSourceLabel(engine: RelayEngine, gatewayConnected = false): { label: string; ready: boolean } {
   if (engine === 'metaapi') return { label: 'MetaAPI', ready: true };
   if (engine === 'ea') return { label: 'EA bridge · EA 橋接', ready: true };
-  return { label: 'Relay Gateway', ready: false };
+  return { label: 'Relay Gateway', ready: gatewayConnected };
 }
 
 export function memberAsCopySettings(m: RelayMember, master: string): CopySettings {
@@ -87,14 +97,15 @@ export function memberAsCopySettings(m: RelayMember, master: string): CopySettin
 }
 
 export async function loadRelayGroup(name: string) {
-  const g = await supabase.from('relay_groups').select('id, name, engine, backfill_days').eq('name', name).maybeSingle();
+  const g = await supabase.from('relay_groups').select('id, name, engine, backfill_days, gateway_seen_at, gateway_key_hash').eq('name', name).maybeSingle();
   if (g.error) return { error: true as const };
   if (!g.data) return { error: false as const, group: null };
-  const group = g.data as RelayGroup;
+  const { gateway_key_hash, ...rest } = g.data;
+  const group = { ...rest, has_gateway_key: !!gateway_key_hash } as RelayGroup;
   const [m, jobs, log] = await Promise.all([
     supabase.from('relay_group_members').select('*').eq('group_id', group.id).order('slot'),
     supabase.from('relay_backfill_jobs').select('id, days, status, rows_imported, requested_at, finished_at').eq('group_id', group.id).order('requested_at', { ascending: false }).limit(5),
-    supabase.from('relay_copy_log').select('id, master_account, follower_account, broker, symbol, master_ticket, master_opened_at, follower_received_at, delay_ms, status, reason').eq('group_id', group.id).order('master_opened_at', { ascending: false }).limit(200),
+    supabase.from('relay_copy_log').select('id, master_account, follower_account, broker, symbol, master_ticket, master_opened_at, gateway_received_at, follower_received_at, delay_ms, status, reason').eq('group_id', group.id).order('master_opened_at', { ascending: false }).limit(200),
   ]);
   if (m.error || jobs.error || log.error) return { error: true as const };
   const members = (m.data ?? []) as RelayMember[];

@@ -1,6 +1,12 @@
 import { ScrollText } from 'lucide-react';
-import { formatTime } from '@/lib/format';
 import type { RelayLogRow } from '@/lib/relay';
+
+const fmtMs = (ts: string | null) => {
+  if (!ts) return '-';
+  const d = new Date(ts);
+  const t = d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  return `${t}.${String(d.getMilliseconds()).padStart(3, '0')}`;
+};
 
 const STATUS: Record<RelayLogRow['status'], { label: string; cls: string }> = {
   pending: { label: 'Pending 等待', cls: 'text-slate-300 border-slate-600' },
@@ -28,10 +34,10 @@ export function RelayLog({ rows }: { rows: RelayLogRow[] }) {
         )}
       </div>
       <div className="overflow-x-auto rounded-lg border border-slate-700/80">
-        <table className="w-full min-w-[760px] text-sm">
+        <table className="w-full min-w-[880px] text-sm">
           <thead className="bg-slate-900 text-left text-xs text-slate-400">
             <tr>
-              {['Master 出單時間', 'Follower 收單時間', '延遲 Delay', 'Status 狀態', 'Broker 券商', 'Symbol', 'Follower'].map((h) => (
+              {['Master 出單時間', 'Gateway 收到時間', 'Follower 落單時間', '延遲 Delay', 'Status 狀態', 'Broker 券商', 'Symbol', 'Follower'].map((h) => (
                 <th key={h} className="px-3 py-2 font-medium">{h}</th>
               ))}
             </tr>
@@ -39,15 +45,16 @@ export function RelayLog({ rows }: { rows: RelayLogRow[] }) {
           <tbody className="divide-y divide-slate-800 bg-slate-900/40">
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-sm text-slate-500">
+                <td colSpan={8} className="px-3 py-8 text-center text-sm text-slate-500">
                   No data yet · 暫時未有數據
                 </td>
               </tr>
             )}
             {rows.map((r) => (
               <tr key={r.id} className={r.status === 'missed' ? 'bg-red-500/5' : ''}>
-                <td className="px-3 py-2 tabular-nums text-slate-300">{formatTime(r.master_opened_at)}</td>
-                <td className="px-3 py-2 tabular-nums text-slate-300">{r.follower_received_at ? formatTime(r.follower_received_at) : '-'}</td>
+                <td className="px-3 py-2 tabular-nums text-slate-300">{fmtMs(r.master_opened_at)}</td>
+                <td className="px-3 py-2 tabular-nums text-slate-300">{fmtMs(r.gateway_received_at)}</td>
+                <td className="px-3 py-2 tabular-nums text-slate-300">{fmtMs(r.follower_received_at)}</td>
                 <td className={`px-3 py-2 tabular-nums ${r.delay_ms == null ? 'text-slate-500' : delayCls(r.delay_ms)}`}>
                   {r.delay_ms == null ? '-' : `${(r.delay_ms / 1000).toFixed(2)} s`}
                 </td>
